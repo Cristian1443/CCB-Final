@@ -1,0 +1,122 @@
+/* src/components/DashboardLayout.css */
+.dashboard-layout {
+    display: flex;
+    /* Eliminamos min-height: 100vh; aquí porque la sidebar fija controlará la altura */
+  }
+  
+  .sidebar {
+    width: 250px; /* Ancho fijo de la sidebar */
+    /* El color de fondo se define en el componente JS */
+    color: white;
+    display: flex;
+    flex-direction: column;
+    /* ==================================================== */
+    /* ESTILOS PARA FIJAR LA SIDEBAR */
+    position: fixed; /* Fija la posición de la sidebar */
+    top: 0; /* La posiciona en la parte superior de la ventana */
+    bottom: 0; /* Extiende la sidebar hasta la parte inferior de la ventana */
+    /* Si tienes un header superior, ajusta 'top' a la altura de tu header */
+    /* Por ejemplo: top: 60px; */
+    /* ==================================================== */
+  }
+  
+  .dashboard-content {
+    flex-grow: 1;
+    padding: 20px;
+    background-color: #f8f9fa;
+    /* ==================================================== */
+    /* AJUSTE PARA EL CONTENIDO PRINCIPAL */
+    /* Añade un margen izquierdo igual al ancho de la sidebar */
+    /* para que el contenido no quede oculto detrás de ella */
+    margin-left: 250px; /* Debe coincidir con el 'width' de .sidebar */
+    /* ==================================================== */
+  }
+  
+  /* Puedes añadir media queries si necesitas ajustar el layout en pantallas pequeñas */
+  /* Por ejemplo, hacer que la sidebar se oculte o cambie de posición */
+  /* @media (max-width: 768px) { ... } */
+  /* src/components/DashboardLayout.css */
+.dashboard-layout {
+    display: flex;
+  }
+  
+  .sidebar {
+    width: 250px;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    /* Asegúrate de que el color de fondo se define en el componente JS */
+  }
+  
+  .dashboard-content {
+    flex-grow: 1;
+    /* Eliminamos el padding aquí y lo movemos al .page-content */
+    /* Eliminamos el background-color aquí y lo movemos al .page-content */
+    margin-left: 250px;
+    display: flex; /* Usa flexbox para apilar el header y el contenido de la página */
+    flex-direction: column; /* Apila los elementos verticalmente */
+  }
+  
+  /* ==================================================== */
+  /* ESTILOS PARA EL ENCABEZADO DEL DASHBOARD */
+  /* ==================================================== */
+  .dashboard-header {
+      background-color: #fff; /* Fondo blanco para el header */
+      padding: 15px 20px; /* Espaciado interno */
+      border-bottom: 1px solid #eee; /* Línea separadora inferior */
+      display: flex; /* Usa flexbox para alinear info de usuario y botón */
+      justify-content: space-between; /* Separa la info de usuario a la izquierda y el botón a la derecha */
+      align-items: center; /* Centra verticalmente los elementos */
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); /* Sombra sutil */
+      /* position: sticky; */ /* Opcional: si quieres que el header se quede pegado arriba al hacer scroll */
+      /* top: 0; */
+      /* z-index: 10; */ /* Asegura que esté por encima de otros elementos si usas sticky */
+  }
+  
+  .user-info {
+      display: flex;
+      align-items: center;
+      gap: 10px; /* Espacio entre los elementos de info de usuario */
+  }
+  
+  .user-name {
+      font-size: 16px;
+      font-weight: bold;
+      color: #333;
+  }
+  
+  .user-role {
+      font-size: 14px;
+      color: #777;
+  }
+  
+  /* Estilos para el botón de Cerrar Sesión */
+  .logout-button {
+      padding: 8px 15px;
+      border: none;
+      border-radius: 4px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background-color 0.3s ease, opacity 0.3s ease;
+      /* Los colores se aplican en línea en el componente JS */
+  }
+  
+  .logout-button:hover {
+      opacity: 0.9; /* Ligea transparencia al pasar el mouse */
+  }
+  
+  /* ==================================================== */
+  /* ESTILOS PARA EL CONTENEDOR DEL CONTENIDO DE LA PÁGINA */
+  /* ==================================================== */
+  .page-content {
+      padding: 20px; /* Añade el padding aquí */
+      background-color: #f8f9fa; /* Añade el color de fondo aquí */
+      flex-grow: 1; /* Permite que el contenido ocupe el espacio restante */
+      /* Si el header es sticky, puede que necesites añadir un padding-top al .page-content
+         igual a la altura del header para que el contenido no quede debajo */
+      /* padding-top: calc(20px + 50px); // Ejemplo: 20px de padding original + 50px de altura del header */
+  }
+  

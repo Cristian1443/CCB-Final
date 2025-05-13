@@ -1,0 +1,387 @@
+/* src/pages/Gestora/ConsultorFormPage.css */
+
+/* Estilos para el contenedor del formulario */
+.consultor-form {
+    background-color: #ffffff; /* Fondo blanco */
+    padding: 30px; /* Espaciado interno */
+    border-radius: 8px; /* Bordes redondeados */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); /* Sombra sutil */
+    max-width: 800px; /* Ancho máximo del formulario */
+    margin: 20px auto; /* Centra el formulario y añade margen superior */
+}
+
+/* Estilos para los grupos de formulario (label + input) */
+.form-group {
+    margin-bottom: 20px; /* Espacio debajo de cada grupo */
+}
+
+.form-group label {
+    display: block; /* Hace que el label ocupe su propia línea */
+    margin-bottom: 8px; /* Espacio debajo del label */
+    font-weight: bold; /* Texto en negrita */
+    color: #555; /* Color del texto del label */
+}
+
+.form-group input[type="text"],
+.form-group input[type="email"],
+.form-group input[type="tel"],
+.form-group input[type="date"],
+.form-group input[type="time"] {
+    width: 100%; /* Ocupa todo el ancho disponible */
+    padding: 10px; /* Espaciado interno del input */
+    border: 1px solid #ccc; /* Borde gris claro */
+    border-radius: 4px; /* Bordes redondeados */
+    font-size: 1em; /* Tamaño de fuente */
+    box-sizing: border-box; /* Incluye padding y borde en el ancho total */
+}
+
+/* ============================================================== */
+/* Estilos para la sección de Verificación de Disponibilidad Específica */
+/* ============================================================== */
+.availability-check-section {
+    margin-top: 30px; /* Espacio arriba */
+    padding-top: 20px; /* Espacio interno arriba */
+    border-top: 1px solid #eee; /* Línea separadora */
+    margin-bottom: 30px; /* Espacio abajo */
+}
+
+.availability-check-section h3 {
+    margin-top: 0;
+    margin-bottom: 10px; /* Espacio debajo del título */
+    color: #333;
+}
+
+.availability-check-section p {
+    margin-bottom: 15px; /* Espacio debajo del párrafo descriptivo */
+    color: #666;
+    font-size: 0.9em;
+}
+
+
+.availability-inputs {
+    display: flex; /* Usa Flexbox para alinear los inputs y el botón */
+    gap: 15px; /* Espacio entre los elementos */
+    align-items: flex-end; /* Alinea los elementos en la parte inferior */
+    flex-wrap: wrap; /* Permite que los elementos se envuelvan en pantallas pequeñas */
+}
+
+.availability-inputs .form-group {
+    flex: 1; /* Permite que los grupos de formulario crezcan */
+    min-width: 150px; /* Ancho mínimo para los inputs */
+    margin-bottom: 0; /* Elimina el margen inferior del form-group dentro de flex */
+}
+
+.check-availability-button {
+    padding: 10px 20px; /* Espaciado interno */
+    background-color: #007bff; /* Color azul */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1em;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+    height: 40px; /* Ajusta la altura para que coincida con los inputs */
+}
+
+.check-availability-button:hover {
+    background-color: #0056b3; /* Azul más oscuro */
+}
+
+.availability-message {
+    margin-top: 15px; /* Espacio arriba del mensaje */
+    padding: 10px;
+    border-radius: 4px;
+    font-weight: bold;
+}
+
+.availability-message.available {
+    background-color: #d4edda; /* Fondo verde claro */
+    color: #155724; /* Texto verde oscuro */
+    border: 1px solid #c3e6cb;
+}
+
+.availability-message.not-available {
+    background-color: #f8d7da; /* Fondo rojo claro */
+    color: #721c24; /* Texto rojo oscuro */
+    border: 1px solid #f5c6cb;
+}
+
+/* Media query para ajustar la sección de disponibilidad en pantallas pequeñas */
+@media (max-width: 600px) {
+    .availability-check-section .availability-inputs {
+        flex-direction: column; /* Apila los elementos verticalmente */
+        align-items: stretch; /* Estira los elementos para que ocupen todo el ancho */
+        gap: 10px; /* Reduce el espacio entre elementos apilados */
+    }
+
+    .availability-check-section .availability-inputs .form-group {
+        min-width: auto; /* Elimina el ancho mínimo */
+        width: 100%; /* Asegura que ocupe todo el ancho */
+    }
+
+    .check-availability-button {
+        width: 100%; /* Estira el botón */
+        height: auto; /* Altura automática */
+    }
+}
+/* ============================================================== */
+
+
+/* ============================================================== */
+/* Estilos para la sección de Sugerencia de Disponibilidad (Nuevo) */
+/* ============================================================== */
+.suggested-availability-section {
+    margin-top: 30px; /* Espacio arriba */
+    padding-top: 20px; /* Espacio interno arriba */
+    border-top: 1px solid #eee; /* Línea separadora */
+    margin-bottom: 30px; /* Espacio abajo */
+}
+
+.suggested-availability-section h3 {
+    margin-top: 0;
+    margin-bottom: 10px; /* Espacio debajo del título */
+    color: #333;
+}
+
+.suggested-availability-section p {
+     margin-bottom: 15px; /* Espacio debajo del párrafo descriptivo */
+     color: #666;
+     font-size: 0.9em;
+}
+
+.availability-summary {
+    background-color: #f9f9f9; /* Fondo ligeramente gris */
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 15px;
+    white-space: pre-wrap; /* Mantiene saltos de línea y espacios */
+    font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace; /* Fuente monoespaciada */
+    font-size: 0.9em;
+    color: #333;
+    max-height: 300px; /* Altura máxima para evitar que sea demasiado largo */
+    overflow-y: auto; /* Añade scroll si el contenido es muy largo */
+}
+/* ============================================================== */
+
+
+/* ============================================================== */
+/* Estilos para la sección de Eventos Asignados (Formato Lista) */
+/* ============================================================== */
+.assigned-events-section {
+    margin-top: 30px; /* Espacio arriba */
+    padding-top: 20px; /* Espacio interno arriba */
+    border-top: 1px solid #eee; /* Línea separadora */
+}
+
+.assigned-events-section h3 {
+    margin-top: 0; /* Elimina margen superior por defecto */
+    margin-bottom: 15px; /* Espacio debajo del título */
+    color: #333;
+}
+
+/* Contenedor principal de la lista de eventos asignados */
+.assigned-events-list-container {
+    border: 1px solid #ddd; /* Borde alrededor de la lista */
+    border-radius: 8px; /* Bordes redondeados */
+    overflow: hidden; /* Oculta el contenido que se desborda (para bordes redondeados) */
+}
+
+/* Estilos para el encabezado de la lista */
+.assigned-events-list-header {
+    display: flex; /* Usa Flexbox para las columnas */
+    background-color: #f0f0f0; /* Fondo gris claro */
+    padding: 12px 15px; /* Espaciado interno */
+    font-weight: bold;
+    color: #555;
+    border-bottom: 1px solid #ddd; /* Borde inferior */
+}
+
+/* Estilos para cada celda del encabezado */
+.assigned-events-list-header .header-cell {
+    flex: 1; /* Permite que las celdas crezcan */
+    padding: 0 5px; /* Espaciado horizontal */
+    text-align: left; /* Alineación del texto */
+    /* Definir anchos aproximados para las columnas */
+    &.event-title-col { flex: 3; } /* Título más ancho */
+    &.event-date-col { flex: 1.5; }
+    &.event-time-col { flex: 1; } /* Ancho para Hora Inicio */
+    &.event-endTime-col { flex: 1; } /* Ancho para Hora Fin */
+    &.event-location-col { flex: 2; }
+    &.event-status-col { flex: 1.5; }
+    &.event-actions-col { flex: 2.5; text-align: center; } /* Columna para botones */
+}
+
+/* Estilos para el cuerpo de la lista */
+.assigned-events-list-body {
+    /* No necesita estilos específicos, solo actúa como contenedor */
+}
+
+/* Estilos para cada fila de evento en la lista */
+.assigned-event-list-item {
+    display: flex; /* Usa Flexbox para las columnas */
+    padding: 12px 15px; /* Espaciado interno */
+    border-bottom: 1px solid #eee; /* Borde inferior entre filas */
+    align-items: center; /* Centra verticalmente el contenido */
+    transition: background-color 0.2s ease; /* Transición suave al pasar el mouse */
+}
+
+.assigned-event-list-item:last-child {
+    border-bottom: none; /* Elimina el borde inferior de la última fila */
+}
+
+.assigned-event-list-item:hover {
+    background-color: #f9f9f9; /* Fondo ligeramente gris al pasar el mouse */
+}
+
+/* Estilos para cada celda de datos del evento */
+.assigned-event-list-item .event-cell {
+    flex: 1; /* Permite que las celdas crezcan */
+    padding: 0 5px; /* Espaciado horizontal */
+    text-align: left; /* Alineación del texto */
+    color: #333;
+    font-size: 0.95em;
+     /* Definir anchos aproximados para las columnas (debe coincidir con el encabezado) */
+    &.event-title-col { flex: 3; }
+    &.event-date-col { flex: 1.5; }
+    &.event-time-col { flex: 1; } /* Ancho para Hora Inicio */
+    &.event-endTime-col { flex: 1; } /* Ancho para Hora Fin */
+    &.event-location-col { flex: 2; }
+    &.event-status-col { flex: 1.5; }
+    &.event-actions-col { flex: 2.5; text-align: center; display: flex; gap: 5px; justify-content: center; flex-wrap: wrap;} /* Columna de acciones con flexbox para botones */
+}
+
+/* Estilos para los botones de acción dentro de la lista de eventos asignados */
+.assigned-event-action-button {
+    padding: 5px 10px; /* Espaciado interno */
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.8em;
+    transition: background-color 0.2s ease, opacity 0.2s ease;
+}
+
+/* Estilos específicos para el botón Editar Evento Asignado */
+.edit-assigned-event-button {
+    background-color: #ffecb3; /* Fondo amarillo claro */
+    color: #ff6f00; /* Texto naranja oscuro */
+}
+
+.edit-assigned-event-button:hover {
+    background-color: #ffe082; /* Amarillo un poco más oscuro */
+}
+
+/* Estilos específicos para el botón Desasignar Evento */
+.delete-assigned-event-button {
+    background-color: #ffcdd2; /* Fondo rojo claro */
+    color: #d32f2f; /* Texto rojo oscuro */
+}
+
+.delete-assigned-event-button:hover {
+    background-color: #ef9a9a; /* Rojo un poco más oscuro */
+}
+
+/* Media query para ajustar el layout en pantallas más pequeñas */
+@media (max-width: 768px) {
+    .assigned-events-list-header,
+    .assigned-event-list-item {
+        flex-direction: column; /* Apila las columnas verticalmente */
+        align-items: flex-start; /* Alinea a la izquierda */
+        padding: 10px 15px; /* Ajusta el padding */
+    }
+
+    .assigned-events-list-header .header-cell,
+    .assigned-event-list-item .event-cell {
+        flex: none; /* Deshabilita el flex-grow */
+        width: 100%; /* Ocupa todo el ancho */
+        padding: 5px 0; /* Ajusta el padding */
+        text-align: left; /* Asegura alineación a la izquierda */
+    }
+
+     .assigned-events-list-header .header-cell.event-actions-col,
+     .assigned-event-list-item .event-cell.event-actions-col {
+         text-align: left; /* Alinea los botones a la izquierda */
+         justify-content: flex-start; /* Alinea los botones a la izquierda */
+         margin-top: 10px; /* Espacio arriba de los botones */
+     }
+
+    .assigned-event-list-item .event-cell strong {
+        display: inline-block; /* Permite que la etiqueta fuerte ocupe espacio */
+        min-width: 80px; /* Ancho mínimo para las etiquetas (ajusta según necesites) */
+        margin-right: 5px; /* Espacio entre la etiqueta y el valor */
+        font-weight: bold; /* Asegura que la etiqueta sea negrita */
+    }
+
+    /* Ocultar encabezados de columna en pantallas pequeñas (opcional, si la información se repite en cada fila) */
+    /* .assigned-events-list-header { display: none; } */
+}
+/* ============================================================== */
+
+
+/* Estilos para el contenedor de los botones de acción del formulario principal */
+.form-actions {
+    margin-top: 30px; /* Espacio arriba */
+    display: flex; /* Usa Flexbox para alinear los botones */
+    gap: 15px; /* Espacio entre los botones */
+    justify-content: flex-end; /* Alinea los botones a la derecha */
+    flex-wrap: wrap; /* Permite que los botones se envuelvan en pantallas pequeñas */
+}
+
+/* Estilos generales para los botones de acción */
+.form-actions button {
+    padding: 10px 20px; /* Espaciado interno */
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1em;
+    font-weight: bold;
+    transition: background-color 0.3s ease, opacity 0.3s ease;
+}
+
+/* Estilos para el botón Guardar */
+.save-button {
+    background-color: #28a745; /* Color verde */
+    color: white;
+}
+
+.save-button:hover {
+    background-color: #218838; /* Verde más oscuro */
+}
+
+/* Estilos para el botón Eliminar Consultor */
+.delete-consultor-button {
+    background-color: #dc3545; /* Color rojo */
+    color: white;
+}
+
+.delete-consultor-button:hover {
+    background-color: #c82333; /* Rojo más oscuro */
+}
+
+/* Estilos para el botón Cancelar */
+.cancel-button {
+    background-color: #6c757d; /* Color gris */
+    color: white;
+}
+
+.cancel-button:hover {
+    background-color: #5a6268; /* Gris más oscuro */
+}
+
+/* Media query para ajustar el formulario en pantallas pequeñas */
+@media (max-width: 600px) {
+    .consultor-form {
+        padding: 20px; /* Reduce el padding */
+        margin: 10px; /* Reduce el margen */
+    }
+
+    .form-actions {
+        flex-direction: column; /* Apila los botones verticalmente */
+        gap: 10px; /* Reduce el espacio entre botones apilados */
+        align-items: stretch; /* Estira los botones para que ocupen todo el ancho */
+    }
+
+    .form-actions button {
+        text-align: center; /* Centra el texto en los botones apilados */
+    }
+}

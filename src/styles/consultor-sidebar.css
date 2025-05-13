@@ -1,0 +1,194 @@
+/* src/styles/consultor-sidebar.css */
+
+/* Importar variables de colores */
+@import './variables.css';
+
+.consultor-sidebar {
+    width: 250px; /* Ancho por defecto en escritorio */
+    background-color: var(--secondary); /* Fondo azul oscuro */
+    color: white; /* Texto blanco */
+    height: 100vh; /* Ocupa toda la altura de la ventana */
+    position: fixed; /* Fijo en la pantalla */
+    top: 0;
+    left: 0;
+    overflow-y: auto; /* Scroll si el contenido es largo */
+    transition: width 0.3s ease, left 0.3s ease; /* Transición para responsividad */
+    z-index: 1000; /* Por encima de otros elementos */
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1); /* Sombra sutil */
+    display: flex; /* Usar flexbox para layout interno */
+    flex-direction: column; /* Apilar header, nav, footer */
+}
+
+.consultor-sidebar-header {
+    padding: var(--spacing-md);
+    text-align: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.consultor-sidebar-header h3 {
+    margin: 0;
+    font-size: 1.3rem; /* Tamaño de título */
+    font-weight: 600;
+}
+
+.consultor-sidebar-nav ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    flex-grow: 1; /* Permitir que la navegación ocupe el espacio restante */
+}
+
+.consultor-sidebar-nav li {
+    margin: 0;
+}
+
+.consultor-sidebar-nav a {
+    display: block;
+    padding: var(--spacing-sm) var(--spacing-md); /* Padding */
+    text-decoration: none;
+    color: rgba(255, 255, 255, 0.8); /* Color de texto por defecto */
+    transition: background-color 0.3s ease, color 0.3s ease;
+    border-left: 4px solid transparent; /* Borde izquierdo para indicador activo */
+}
+
+/* Estilos para el enlace activo */
+.consultor-sidebar-nav a.active {
+    font-weight: bold;
+    background-color: rgba(255, 255, 255, 0.1); /* Fondo sutil */
+    color: white; /* Texto blanco */
+    border-left-color: var(--primary); /* Borde rojo activo */
+}
+
+/* Estilos al pasar el mouse */
+.consultor-sidebar-nav a:hover:not(.active) {
+    background-color: rgba(255, 255, 255, 0.08); /* Fondo más sutil */
+    color: white;
+}
+
+/* Estilos para el botón de cerrar sesión si lo añades */
+.sidebar-logout-button {
+    display: block;
+    width: 100%;
+    padding: var(--spacing-sm) var(--spacing-md);
+    text-align: left;
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.8);
+    cursor: pointer;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.sidebar-logout-button:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+    color: white;
+}
+
+
+.consultor-sidebar-footer {
+    padding: var(--spacing-md);
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.6);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    margin-top: auto; /* Empuja el footer hacia abajo */
+}
+
+/* ==== Responsividad del Sidebar ==== */
+
+/* Media query para pantallas medianas (tablets y similares) */
+@media (max-width: 768px) {
+    .consultor-sidebar {
+        width: 70px; /* Reducir ancho para solo iconos */
+    }
+
+    .consultor-sidebar-header h3 {
+        display: none; /* Ocultar título */
+    }
+
+    .consultor-sidebar-nav a {
+        padding: var(--spacing-sm) 0; /* Ajustar padding para centrar iconos */
+        text-align: center; /* Centrar contenido */
+        border-left: none; /* Eliminar borde izquierdo */
+        border-bottom: 2px solid transparent; /* Añadir borde inferior para activo */
+    }
+
+    .consultor-sidebar-nav a.active {
+        border-left-color: transparent; /* Eliminar borde izquierdo activo */
+        border-bottom-color: var(--primary); /* Borde inferior rojo activo */
+        padding: var(--spacing-sm) 0; /* Mantener padding */
+    }
+
+     .consultor-sidebar-footer {
+        display: none; /* Ocultar footer en este tamaño */
+     }
+
+     .sidebar-logout-button {
+         text-align: center; /* Centrar botón */
+         padding: var(--spacing-sm) 0; /* Ajustar padding */
+     }
+}
+
+/* Media query para pantallas pequeñas (móviles) */
+@media (max-width: 480px) {
+    .consultor-sidebar {
+        width: 100%; /* Ocupar todo el ancho */
+        height: auto; /* Altura automática */
+        position: relative; /* Cambiar a posición relativa */
+        flex-direction: row; /* Poner elementos en fila */
+        justify-content: space-between; /* Espacio entre header y nav */
+        align-items: center; /* Alinear verticalmente */
+        padding: var(--spacing-sm); /* Reducir padding */
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Sombra inferior */
+    }
+
+    .consultor-sidebar-header {
+        padding: 0; /* Eliminar padding */
+        border-bottom: none; /* Eliminar borde */
+        flex-shrink: 0; /* Evitar que se encoja */
+    }
+
+    .consultor-sidebar-header h3 {
+        display: block; /* Mostrar título */
+        font-size: 1.1rem; /* Reducir tamaño */
+        text-align: left; /* Alinear a la izquierda */
+    }
+
+    .consultor-sidebar-nav {
+        flex-grow: 1; /* Permitir que la navegación ocupe el espacio restante */
+    }
+
+    .consultor-sidebar-nav ul {
+        flex-direction: row; /* Poner enlaces en fila */
+        justify-content: flex-end; /* Alinear enlaces a la derecha */
+        gap: var(--spacing-sm); /* Espacio entre enlaces */
+        flex-wrap: wrap; /* Permitir que los enlaces se envuelvan */
+    }
+
+    .consultor-sidebar-nav li {
+        flex-grow: 0; /* No forzar crecimiento */
+        text-align: center;
+    }
+
+    .consultor-sidebar-nav a {
+        padding: var(--spacing-xs) var(--spacing-sm); /* Ajustar padding */
+        font-size: 0.85rem; /* Reducir tamaño de fuente */
+        border-bottom: none;
+        border-left: none;
+        border-radius: 4px; /* Añadir borde redondeado */
+    }
+
+     .consultor-sidebar-nav a.active {
+         border-bottom-color: transparent;
+         border-left-color: transparent;
+         background-color: rgba(255, 255, 255, 0.15); /* Fondo más visible activo */
+     }
+
+     .consultor-sidebar-footer {
+        display: none; /* Ocultar footer */
+     }
+
+     .sidebar-logout-button {
+         display: none; /* Ocultar botón de logout en esta disposición */
+     }
+}

@@ -1,0 +1,38 @@
+/* src/styles/consultor-layout.css */
+
+/* Importar variables de colores - Ruta corregida */
+@import './variables.css';
+
+.consultor-layout-container {
+    display: flex; /* Usar flexbox para el layout principal */
+    min-height: 100vh; /* Ocupar al menos toda la altura de la ventana */
+}
+
+.consultor-content-area {
+    flex-grow: 1; /* Permitir que el área de contenido ocupe el espacio restante */
+    margin-left: 250px; /* Dejar espacio para el sidebar en escritorio (igual que el ancho del sidebar) */
+    padding: var(--spacing-md); /* Padding interno */
+    background-color: var(--light-background); /* Fondo del área de contenido */
+    transition: margin-left 0.3s ease; /* Transición suave al cambiar el margen */
+    box-sizing: border-box; /* Incluir padding en el tamaño */
+    width: 100%; /* Asegurar que ocupe el 100% del ancho disponible */
+}
+
+/* Media query para pantallas medianas (tablets y similares) */
+@media (max-width: 768px) {
+    .consultor-content-area {
+        margin-left: 70px; /* Ajustar margen para el sidebar más estrecho */
+        padding: var(--spacing-sm); /* Reducir padding */
+    }
+}
+
+/* Media query para pantallas pequeñas (móviles) */
+@media (max-width: 480px) {
+    .consultor-content-area {
+        margin-left: 0; /* Eliminar margen izquierdo cuando el sidebar está arriba */
+        padding: var(--spacing-sm); /* Reducir padding */
+        /* Añadir padding superior para dejar espacio al sidebar horizontal en móvil */
+        /* Ajusta el valor (ej: 60px) según la altura real de tu sidebar en móvil */
+        padding-top: calc(var(--spacing-sm) + 60px);
+    }
+}

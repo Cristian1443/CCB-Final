@@ -1,0 +1,104 @@
+/* src/pages/Auth/LoginForm.css */
+
+.login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    /* Puedes añadir un fondo similar al de la imagen si lo deseas */
+    /* background: linear-gradient(to bottom right, #f0f0f0, #e0e0e0); */
+    background-color: #f0f2f5; /* Un fondo gris claro para simular el ambiente */
+  }
+  
+  .login-box {
+    background-color: #fff;
+    padding: 40px;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    width: 100%;
+    max-width: 400px; /* Ajusta el ancho máximo según necesites */
+  }
+  
+  .system-title {
+    font-size: 28px;
+    margin-bottom: 10px;
+    /* El color para este título se aplica desde LoginForm.js usando style */
+  }
+  
+  .subtitle {
+    color: #777;
+    margin-bottom: 30px;
+    font-size: 16px;
+  }
+  
+  .form-group {
+    text-align: left;
+    margin-bottom: 20px;
+  }
+  
+  .form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+    color: #555;
+    font-size: 14px;
+  }
+  
+  .form-group input[type="text"],
+  .form-group input[type="password"] {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box; /* Incluye padding y borde en el ancho total */
+    font-size: 16px;
+  }
+  
+  .options-group {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    font-size: 14px;
+  }
+  
+  .remember-me {
+      display: flex;
+      align-items: center;
+  }
+  
+  .remember-me input[type="checkbox"] {
+      margin-right: 5px;
+  }
+  
+  
+  .remember-me label {
+    /* margin-left: 5px; */ /* Ajustado por el margin-right del input */
+    color: #555;
+    font-weight: normal; /* La etiqueta del checkbox no suele ser negrita */
+  }
+  
+  .forgot-password {
+    text-decoration: none;
+    font-size: 14px;
+    /* El color para este enlace se aplica desde LoginForm.js usando style */
+  }
+  
+  .login-button {
+    width: 100%;
+    padding: 12px;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+     /* El color de fondo se aplica desde LoginForm.js usando style */
+  }
+  
+  .login-button:hover {
+    /* Un tono ligeramente más oscuro para el hover */
+    /* El color del hover también se puede ajustar aquí o en JS si usas los colores */
+    filter: brightness(90%); /* Oscurece un poco el color de fondo */
+  }

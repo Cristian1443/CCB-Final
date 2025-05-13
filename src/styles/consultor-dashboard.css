@@ -1,0 +1,169 @@
+/* src/styles/consultor-dashboard.css */
+
+/* Importar variables de colores - Ruta corregida */
+@import './variables.css';
+
+.consultor-dashboard-container {
+    /* Este padding y margin ya están definidos en consultor-layout.css para el .consultor-content-area */
+    /* Puedes añadir estilos específicos para el contenido DENTRO del área de contenido aquí */
+    padding: var(--spacing-md); /* Padding interno */
+    background-color: var(--background); /* Fondo blanco */
+    border-radius: 10px; /* Bordes redondeados */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); /* Sombra */
+    margin-bottom: var(--spacing-md); /* Espacio debajo del contenedor */
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md); /* Espacio entre elementos internos */
+    box-sizing: border-box;
+}
+
+.consultor-dashboard-container h2 {
+    margin-top: 0;
+    margin-bottom: var(--spacing-md); /* Espacio debajo del título */
+    color: var(--secondary);
+    font-size: 1.8rem; /* Tamaño de título */
+    font-weight: 700;
+    text-align: center;
+}
+
+.loading-message,
+.error-message {
+    text-align: center;
+    font-size: 1.1em;
+    color: var(--textSecondary);
+    padding: var(--spacing-sm);
+    background-color: var(--light-background);
+    border-radius: 6px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+    box-sizing: border-box;
+}
+
+.error-message {
+    color: var(--primary);
+    font-weight: bold;
+    background-color: #ffebee; /* Fondo rojo claro */
+    border: 1px solid var(--primary);
+}
+
+/* ==== Estilos para el Modal de Detalles del Evento (si lo implementas manualmente) ==== */
+/* Si usas el popup por defecto de react-big-calendar, estos estilos no aplican */
+.event-detail-modal-overlay {
+    position: fixed; /* Posición fija para cubrir toda la pantalla */
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5); /* Fondo semi-transparente oscuro */
+    display: flex;
+    justify-content: center; /* Centrar horizontalmente */
+    align-items: center; /* Centrar verticalmente */
+    z-index: 2000; /* Por encima de todo lo demás */
+}
+
+.event-detail-modal-content {
+    background-color: var(--background); /* Fondo blanco del modal */
+    padding: var(--spacing-md);
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); /* Sombra más pronunciada */
+    max-width: 500px; /* Ancho máximo del modal */
+    width: 90%; /* Ocupar el 90% del ancho en pantallas pequeñas */
+    max-height: 90vh; /* Altura máxima */
+    overflow-y: auto; /* Scroll si el contenido es muy largo */
+    position: relative; /* Para posicionar el botón de cerrar */
+    box-sizing: border-box;
+}
+
+.event-detail-modal-content h3 {
+    margin-top: 0;
+    margin-bottom: var(--spacing-sm);
+    color: var(--secondary);
+    font-size: 1.4rem;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: var(--spacing-xs);
+}
+
+.event-detail-modal-content p {
+    margin: 0.6rem 0;
+    color: var(--textSecondary);
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+.event-detail-modal-content strong {
+    color: var(--textPrimary);
+    font-weight: 600;
+}
+
+.close-modal-button {
+    position: absolute; /* Posicionar el botón de cerrar */
+    top: var(--spacing-sm);
+    right: var(--spacing-sm);
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--textSecondary);
+    transition: color 0.2s ease;
+}
+
+.close-modal-button:hover {
+    color: var(--primary);
+}
+
+
+/* ==== Responsividad de la página y modal ==== */
+
+@media (max-width: 767px) {
+    .consultor-dashboard-container {
+        padding: var(--spacing-sm);
+        gap: var(--spacing-md);
+    }
+    .consultor-dashboard-container h2 {
+        font-size: 1.6rem;
+        margin-bottom: var(--spacing-md);
+    }
+    .loading-message,
+    .error-message {
+        font-size: 1em;
+        padding: var(--spacing-sm);
+    }
+     .event-detail-modal-content {
+         padding: var(--spacing-sm);
+         max-width: 95%; /* Un poco más ancho en móviles */
+     }
+      .event-detail-modal-content h3 {
+         font-size: 1.2rem;
+      }
+      .event-detail-modal-content p {
+         font-size: 0.9rem;
+         margin: 0.4rem 0;
+      }
+       .close-modal-button {
+         font-size: 1.3rem;
+         top: var(--spacing-xs);
+         right: var(--spacing-xs);
+       }
+}
+
+@media (max-width: 480px) {
+    .consultor-dashboard-container {
+        padding: var(--spacing-sm); /* Mantener padding */
+        gap: var(--spacing-md);
+    }
+    .consultor-dashboard-container h2 {
+        font-size: 1.4rem;
+        margin-bottom: var(--spacing-sm);
+    }
+     .event-detail-modal-content {
+         padding: var(--spacing-sm);
+     }
+      .event-detail-modal-content h3 {
+         font-size: 1.1rem;
+      }
+      .event-detail-modal-content p {
+         font-size: 0.85rem;
+      }
+       .close-modal-button {
+         font-size: 1.2rem;
+       }
+}

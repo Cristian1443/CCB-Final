@@ -1,0 +1,27 @@
+/* src/styles/variables.css */
+
+:root {
+    --primary: #e4022c; /* Rojo */
+    --secondary: #273474; /* Azul oscuro */
+    --complement: #394a9e; /* Azul un poco más claro */
+
+    --textPrimary: #333; /* Texto oscuro */
+    --textSecondary: #555; /* Texto gris */
+    --border: #ccc; /* Borde gris claro */
+    --background: #fff; /* Fondo blanco */
+    --light-background: #f8f8f8; /* Fondo gris muy claro */
+
+    /* Variables para espaciado */
+    --spacing-xs: 0.5rem;
+    --spacing-sm: 1rem;
+    --spacing-md: 1.5rem;
+    --spacing-lg: 2rem;
+    --spacing-xl: 3rem;
+    --spacing-xxl: 4rem;
+
+    /* Colores para estados de eventos (ejemplo, puedes ajustarlos) */
+    --status-pending: #ff9800; /* Naranja para Pendiente */
+    --status-accepted: #4caf50; /* Verde para Aceptado */
+    --status-returned: #dc3545; /* Rojo para Devuelto */
+    --status-info: #2196f3; /* Azul para Información */
+}
