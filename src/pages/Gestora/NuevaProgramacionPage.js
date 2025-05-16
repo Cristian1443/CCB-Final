@@ -6,10 +6,11 @@ import DashboardLayout from "../../components/DashboardLayout";
 import "./NuevaProgramacionPage.css";
 import { colors } from "../../colors";
 import * as XLSX from "xlsx";
+import { useNavigate } from 'react-router-dom'; // Importa useNavigate
 
 function NuevaProgramacionPage() {
   const [inputMethod, setInputMethod] = useState("manual");
-
+  const navigate = useNavigate();
   // =========================================================================
   // Estados para los campos del formulario manual
   // =========================================================================
@@ -68,6 +69,7 @@ function NuevaProgramacionPage() {
   // =========================================================================
   // Datos Mock de Consultores (En una app real, esto vendría de una API)
   // =========================================================================
+  
   const mockConsultores = [
     {
       nombre: "Julie Sáenz",
@@ -93,37 +95,6 @@ function NuevaProgramacionPage() {
     // Añade más consultores ficticios aquí
   ];
   // =========================================================================
-
-  // Lista de opciones para el desplegable de Sector
-  const sectorOptions = [
-    "Economia popular",
-    "Innovación",
-    "Bogota Emprende y Cundinamarca Emprende",
-    "Estrategia Financiera y Rendición de Cuentas para el Sector Moda e Industrias Creativas y Culturales",
-    "Fortalecimiento de Equipos de Venta para el Sector Moda",
-    "No aplica",
-    "Gestión del Talento Humano para el sector construcción",
-    "Excelencia para el sector Turismo",
-    "Proyectos financieros con proposito y Gestion financiera en empresas de servicios empresariales",
-    "Transformación digital",
-    "Tecnología en modelos de negocio y servicios de Consultoria",
-    "Tecnología en Cadena de abastecimiento - (Logistica)",
-    "Programa de Desarrollo proveedores",
-    "Marketing Experiencial",
-    "Servicio al Cliente para el sector gastronomico",
-    "Mercadeo para Impulsar el Crecimiento",
-    "Inteligencia Artificial",
-    "Fidelización y atracción del Talento Humano",
-    "Indicadores de gestión",
-    "Metodologias de mejoramiento de la Productividad",
-    "Gestión Finaciero",
-    "Talleres",
-    "Asesorias individales",
-    "INTERNACIONALIZACION - Entregable - Preseleccion de mercado",
-    "INTERNACIONALIZACION - Entregable - MarketFit",
-    "INTERNACIONALIZACION - Entregable - One Pager",
-    "ESCUELA DE MENTORES",
-  ];
 
   const clasificacionOption = [80000, 85000, 90000, 95000, 100000, 105000];
 
@@ -422,31 +393,58 @@ function NuevaProgramacionPage() {
   // =========================================================================
   // Función para manejar el cambio en el campo Nombre del Consultor
   // =========================================================================
-  const handleNombreConsultorChange = (event) => {
-    const name = event.target.value;
-    setNombreConsultor(name); // Actualiza el estado del nombre del consultor
+  const handleNombreConsultorChange = (e) => {
+  const nombre = e.target.value;
+  setNombreConsultor(nombre);
 
-    // Busca el consultor en la lista mock
-    const foundConsultor = mockConsultores.find(
-      (consultor) => consultor.nombre.toLowerCase() === name.toLowerCase()
-    );
+  // Buscar el consultor por nombre
+  const consultor = mockConsultores.find(c => c.nombre === nombre);
 
-    // Si se encuentra el consultor, llena los otros campos
-    if (foundConsultor) {
-      setCedula(foundConsultor.cedula);
-      setEmailConsultor(foundConsultor.email);
-      setCelular(foundConsultor.celular);
-      setDireccion(foundConsultor.direccion);
-    } else {
-      // Si no se encuentra, limpia los otros campos
-      setCedula("");
-      setEmailConsultor("");
-      setCelular("");
-      setDireccion("");
-    }
-  };
+  if (consultor) {
+    setCedula(consultor.cedula);
+    setEmailConsultor(consultor.email);
+    setCelular(consultor.celular);
+    setDireccion(consultor.direccion);
+  } else {
+    // Si no encuentra coincidencia, limpia los campos
+    setCedula("");
+    setEmailConsultor("");
+    setCelular("");
+    setDireccion("");
+  }
+};
+
   // =========================================================================
+  const handleManualSubmit = (e) => {
+  e.preventDefault();
 
+  const nuevoEvento = {
+    id: Date.now().toString(), // Generar ID único
+    title: tematica,
+    program: programa,
+    location: sector,
+    date: fechaFormacion, // puedes usar el valor real de tu input
+    time: horaInicio,
+    modality: modalidad,
+    status: estadoActividad,
+    instructor: nombreConsultor,
+    participants: numeroAsistentes,
+  };
+
+  // Obtiene eventos existentes desde localStorage
+  const eventosGuardados = JSON.parse(localStorage.getItem("eventos")) || [];
+
+  // Agrega el nuevo
+  const nuevosEventos = [...eventosGuardados, nuevoEvento];
+  localStorage.setItem("eventos", JSON.stringify(nuevosEventos));
+
+  alert("Programación guardada exitosamente");
+
+  // Redirige al dashboard si deseas
+  navigate("/gestora");
+};
+
+/** 
   const handleManualSubmit = (event) => {
     event.preventDefault();
     const formData = {
@@ -494,7 +492,7 @@ function NuevaProgramacionPage() {
     console.log("Datos del formulario manual:", formData);
     alert("Formulario manual enviado. Revisa la consola para ver los datos.");
   };
-
+*/
   function convertExcelTimeTo24HourFormat(timeStr) {
   // Ej: "2:30 PM" -> "14:30"
   if (typeof timeStr !== 'string') return '';
@@ -848,6 +846,17 @@ function convertExcelTime(value) {
                     />
                   </div>
 
+                  {/* Campo: N asitentes (Condicional según Numero de asistentes) */}
+                  <div className="form-group">
+                    <label htmlFor="numeroAsistentes">Numero de Asistentes</label>
+                    <input
+                      type="Number"
+                      id="numeroAsistentes"
+                      value={numeroAsistentes}
+                      onChange={(e) => setNumeroAsistentes(e.target.value)}
+                    />
+                  </div>
+
                   {/* Campo: Region - CAMBIADO A SELECT */}
                   <div className="form-group">
                     <label htmlFor="region">Región</label>
@@ -855,7 +864,6 @@ function convertExcelTime(value) {
                       id="region"
                       value={region}
                       onChange={(e) => setRegion(e.target.value)}
-                      required
                     >
                       <option value="">Selecciona una región</option>
                       <option value="1">Región 1</option>
@@ -1048,20 +1056,27 @@ function convertExcelTime(value) {
                     <label htmlFor="nombreConsultor">
                       Nombre del Consultor
                     </label>
-                    <input
-                      type="text"
-                      id="nombreConsultor"
-                      value={nombreConsultor}
-                      onChange={handleNombreConsultorChange} // Llama a la nueva función al cambiar
-                      required
-                    />
+                    <select
+  id="nombreConsultor"
+  value={nombreConsultor}
+  onChange={handleNombreConsultorChange}
+  required
+>
+  <option value="">Seleccione un consultor</option>
+  {mockConsultores.map((c) => (
+    <option key={c.cedula} value={c.nombre}>
+      {c.nombre}
+    </option>
+  ))}
+</select>
+
                   </div>
 
                   {/* Campo: Cédula - SE LLENARÁ AUTOMATICAMENTE */}
                   <div className="form-group">
                     <label htmlFor="cedula">Cédula</label>
                     <input
-                      type="text"
+                      type="number"
                       id="cedula"
                       value={cedula}
                       onChange={(e) => setCedula(e.target.value)} // Permite edición manual si es necesario

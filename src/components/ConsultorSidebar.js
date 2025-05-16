@@ -1,32 +1,39 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-// Ruta corregida para el CSS del sidebar
-import '../styles/consultor-sidebar.css';
-// Importa tu hook de autenticación si necesitas mostrar info del usuario o manejar logout aquí
-// import { useAuth } from '../context/AuthContext';
+// Ruta corregida para el CSS del sidebar según tu estructura
+import '../styles/consultorsidebar.css';
+// Importa tu hook de autenticación para el botón de cerrar sesión
+import { useAuth } from '../context/AuthContext'; // Asegúrate de que la ruta sea correcta
 
-const ConsultorSidebar = () => {
+const ConsultorSidebar = ({ isOpen, toggleSidebar }) => {
   const location = useLocation();
-  // const { currentUser, logout } = useAuth(); // Ejemplo de uso del contexto
+  const { logout } = useAuth(); // Usamos el hook useAuth para acceder a la función logout
 
-  // Enlaces de navegación para el consultor
-  // Mantengamos los nombres en español para que sea intuitivo
+  // Enlaces de navegación principales
   const navLinks = [
     { name: 'Calendario', path: '/consultor/dashboard' },
-    // Puedes añadir más enlaces específicos para el consultor aquí
-    // { name: 'Mi Perfil', path: '/consultor/perfil' },
+    { name: 'Eventos', path: '/consultor/events' }, // <-- Nuevo enlace a la página de eventos
+    // Puedes añadir más enlaces principales aquí
   ];
 
-  // Función para manejar el cierre de sesión (si tienes un botón en el sidebar)
-  // const handleLogout = () => {
-  //   logout(); // Llama a la función de logout de tu contexto
-  // };
+  // Función para manejar el cierre de sesión
+  const handleLogout = () => {
+    logout(); // Llama a la función logout de tu contexto
+    // La redirección al login se manejará automáticamente si tu contexto
+    // y App.js están configurados para ello (al cambiar isAuthenticated a false)
+  };
 
   return (
-    <div className="consultor-sidebar">
+    // Añadimos la clase 'open' si el sidebar está abierto (solo relevante en móvil)
+    <div className={`consultor-sidebar ${isOpen ? 'open' : ''}`}>
       <div className="consultor-sidebar-header">
         {/* Logo o título de la aplicación/sección */}
         <h3>Consultor CCB</h3>
+         {/* Botón para cerrar el sidebar en móvil (la 'X') */}
+         {/* Solo visible en pantallas pequeñas gracias al CSS */}
+        <button className="close-sidebar-button" onClick={toggleSidebar}>
+           &times; {/* Símbolo de multiplicación para una 'X' simple */}
+        </button>
       </div>
       <nav className="consultor-sidebar-nav">
         <ul>
@@ -35,21 +42,26 @@ const ConsultorSidebar = () => {
               <Link
                 to={link.path}
                 className={location.pathname === link.path ? 'active' : ''}
+                onClick={toggleSidebar} 
               >
                  {/* Aquí puedes añadir iconos si lo deseas, ej: <i className="fas fa-calendar-alt"></i> */}
                 {link.name}
               </Link>
             </li>
           ))}
-          {/* Ejemplo de botón de cerrar sesión si lo pones en el sidebar */}
-          {/* <li>
+          {/* Botón de cerrar sesión en el sidebar */}
+          <li>
              <button onClick={handleLogout} className="sidebar-logout-button">
                 Cerrar Sesión
              </button>
-          </li> */}
+          </li>
         </ul>
       </nav>
+
+      {/* La sección de lista de eventos y filtros YA NO VA AQUÍ */}
+
       {/* Información adicional o pie de página del sidebar */}
+      {/* Puedes mostrar el nombre del usuario si lo tienes en el contexto */}
       {/* <div className="consultor-sidebar-footer">
          <p>Usuario: {currentUser?.name || 'Consultor'}</p>
       </div> */}

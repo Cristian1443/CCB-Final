@@ -71,7 +71,7 @@ function GestoraDashboard() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-
+/** 
     useEffect(() => {
         setLoading(true);
         try {
@@ -88,6 +88,26 @@ function GestoraDashboard() {
         }
 
     }, []);
+*/
+useEffect(() => {
+  setLoading(true);
+
+  try {
+    const eventosGuardados = JSON.parse(localStorage.getItem("eventos")) || [];
+    
+    // Si no hay ninguno, usa los eventos de ejemplo
+    const eventosFinales = eventosGuardados.length > 0
+      ? eventosGuardados
+      : upcomingMockEvents;
+
+    setUpcomingEvents(eventosFinales);
+    setLoading(false);
+  } catch (err) {
+    setError("Error al cargar los datos del dashboard.");
+    setLoading(false);
+    console.error(err);
+  }
+}, []);
 
 
     // Función para manejar la eliminación de un evento (funcionalidad no completa en este ejemplo)

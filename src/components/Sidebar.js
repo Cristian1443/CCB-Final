@@ -26,7 +26,8 @@ function Sidebar() {
   }, []);
 
   const navItems = [
-    { path: '/gestora', label: 'Dashboard' },
+    { path: '/gestora/dashboard', label: 'Dashboard' },
+    { path: '/gestora', label: 'Programaciones' },
     { path: '/gestora/eventos', label: 'Eventos' },
     { path: '/gestora/consultores', label: 'Consultores' },
     { path: '/gestora/evidencias', label: 'Evidencias' },

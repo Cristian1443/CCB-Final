@@ -1,7 +1,7 @@
 /* src/styles/consultor-dashboard.css */
 
-/* Importar variables de colores - Ruta corregida */
-@import './variables.css';
+/* Importar variables de colores (ruta según tu estructura) */
+@import '../../styles/variables.css';
 
 .consultor-dashboard-container {
     /* Este padding y margin ya están definidos en consultor-layout.css para el .consultor-content-area */
@@ -45,8 +45,7 @@
     border: 1px solid var(--primary);
 }
 
-/* ==== Estilos para el Modal de Detalles del Evento (si lo implementas manualmente) ==== */
-/* Si usas el popup por defecto de react-big-calendar, estos estilos no aplican */
+/* ==== Estilos para el Modal de Detalles del Evento ==== */
 .event-detail-modal-overlay {
     position: fixed; /* Posición fija para cubrir toda la pantalla */
     top: 0;
@@ -58,7 +57,18 @@
     justify-content: center; /* Centrar horizontalmente */
     align-items: center; /* Centrar verticalmente */
     z-index: 2000; /* Por encima de todo lo demás */
+    /* Animación de entrada */
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
 }
+
+/* Clase para mostrar el modal (se añade con JS/React) */
+.event-detail-modal-overlay.visible {
+    opacity: 1;
+    visibility: visible;
+}
+
 
 .event-detail-modal-content {
     background-color: var(--background); /* Fondo blanco del modal */
@@ -71,7 +81,18 @@
     overflow-y: auto; /* Scroll si el contenido es muy largo */
     position: relative; /* Para posicionar el botón de cerrar */
     box-sizing: border-box;
+    /* Animación de entrada */
+    transform: translateY(-20px);
+    opacity: 0;
+    transition: transform 0.3s ease, opacity 0.3s ease;
 }
+
+/* Animación de entrada para el contenido del modal */
+.event-detail-modal-overlay.visible .event-detail-modal-content {
+    transform: translateY(0);
+    opacity: 1;
+}
+
 
 .event-detail-modal-content h3 {
     margin-top: 0;
@@ -81,6 +102,16 @@
     border-bottom: 1px solid var(--border);
     padding-bottom: var(--spacing-xs);
 }
+
+.event-detail-modal-content h4 { /* Estilo para subtítulos en el modal */
+    margin-top: var(--spacing-md);
+    margin-bottom: var(--spacing-xs);
+    color: var(--complement);
+    font-size: 1.2rem;
+    border-bottom: 1px dashed var(--border); /* Borde punteado */
+    padding-bottom: var(--spacing-xs);
+}
+
 
 .event-detail-modal-content p {
     margin: 0.6rem 0;
@@ -134,6 +165,9 @@
       .event-detail-modal-content h3 {
          font-size: 1.2rem;
       }
+       .event-detail-modal-content h4 {
+         font-size: 1.1rem;
+       }
       .event-detail-modal-content p {
          font-size: 0.9rem;
          margin: 0.4rem 0;
@@ -160,6 +194,9 @@
       .event-detail-modal-content h3 {
          font-size: 1.1rem;
       }
+       .event-detail-modal-content h4 {
+         font-size: 1rem;
+       }
       .event-detail-modal-content p {
          font-size: 0.85rem;
       }

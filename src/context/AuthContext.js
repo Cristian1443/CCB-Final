@@ -1,142 +1,133 @@
 // src/context/AuthContext.js
 import React, { createContext, useContext, useState, useEffect } from 'react';
-// Aquí importarías tus funciones reales para llamar a tu API de backend
-// Por ejemplo: import { loginUserApi, logoutUserApi } from '../utils/api';
+import { useNavigate } from 'react-router-dom';
 
 // Creamos el Contexto de Autenticación
 const AuthContext = createContext(null);
 
 // Componente Proveedor de Autenticación
-// Este componente envolverá a tu aplicación (o a las partes que necesiten autenticación)
 export const AuthProvider = ({ children }) => {
-  // Estados para manejar si el usuario está autenticado, su rol y si se está cargando la autenticación inicial
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userRole, setUserRole] = useState(null);
-  const [loading, setLoading] = useState(true); // Estado para manejar la carga inicial al verificar la sesión
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
-  // useEffect para verificar el estado de autenticación al montar el componente (cuando carga la app)
+  // Efecto para verificar la sesión al cargar la aplicación
   useEffect(() => {
-    console.log('AuthContext useEffect: Verificando sesión en localStorage...');
-    // En una aplicación real, aquí verificarías si hay un token válido
-    // y podrías hacer una llamada a una API para validar que el token no ha expirado
-    const token = localStorage.getItem('authToken');
-    const role = localStorage.getItem('userRole');
+    const verifyAuth = async () => {
+      const token = localStorage.getItem('authToken');
+      const role = localStorage.getItem('userRole');
 
-    if (token && role) {
-      // Si encontramos token y rol, asumimos que está autenticado (en esta simulación)
-      console.log('AuthContext useEffect: Token y rol encontrados en localStorage.', { token, role });
-      setIsAuthenticated(true);
-      setUserRole(role);
-    } else {
-      console.log('AuthContext useEffect: No se encontraron token o rol en localStorage.');
-    }
-    // Una vez terminada la verificación inicial, ponemos loading en false
-    setLoading(false);
-    console.log('AuthContext useEffect: Verificación inicial completa. loading = false.');
-  }, []); // El array vacío asegura que este efecto se ejecute solo una vez al montar el componente
+      if (token && role) {
+        // En una aplicación real, aquí validarías el token con el backend
+        setIsAuthenticated(true);
+        setUserRole(role);
+        
+        // Redirige al dashboard correspondiente si está en una ruta pública
+        if (window.location.pathname === '/login') {
+          navigate(`/${role}`);
+        }
+      }
+      setLoading(false);
+    };
+
+    verifyAuth();
+  }, [navigate]);
 
   // Función para manejar el inicio de sesión
-  // Recibe el nombre de usuario, la contraseña y el rol seleccionado desde el formulario
   const login = async (username, password, selectedRole) => {
-    console.log('A. Entrando a la función login en AuthContext...');
-    console.log('B. Credenciales recibidas en login:', { username, password, selectedRole });
-    setLoading(true); // Indicamos que el proceso de login está cargando
-
+    setLoading(true);
+    setUserRole(null);
+    
     try {
-      // --- INICIO DE SIMULACIÓN DE LOGIN ---
-      // ** Aquí integrarías tu llamada REAL a la API de backend **
-      // await loginUserApi(username, password); // Llama a tu API
-      // La API te respondería con un token y el ROL VERDADERO del usuario validado.
-      // No confíes en 'selectedRole' del frontend para decidir el acceso en una app real.
-
-      // Simulación: Usuarios válidos y sus roles (aquí usamos el nombre de usuario para simular el rol)
+      // SIMULACIÓN DE API - EN PRODUCCIÓN REEMPLAZAR CON LLAMADA REAL
       const validUsers = {
-        'testgestora': 'password', // Usuario ficticio para gestora
-        'testconsultor': 'password', // Usuario ficticio para consultor
-        'testreclutador': 'password', // Usuario ficticio para reclutador
+        'testgestora': { password: 'password', role: 'gestora' },
+        'testconsultor': { password: 'password', role: 'consultor' },
+        'testreclutador': { password: 'password', role: 'reclutador' }
       };
 
-      if (validUsers[username] === password) { // Si las credenciales coinciden con un usuario simulado
-         console.log('C. Credenciales de simulación válidas.');
-         // En la simulación, asumimos que el rol seleccionado es el correcto para este usuario ficticio.
-         // En una app real, usarías el rol DE VUELTA DEL BACKEND.
-         const token = 'fake-token-de-' + username; // Token ficticio basado en el usuario
-         const role = selectedRole; // Usamos el rol seleccionado para la simulación de redirección
+      const user = validUsers[username];
 
-         // Intentamos guardar el token y el rol en localStorage
-         try {
-            localStorage.setItem('authToken', token);
-            localStorage.setItem('userRole', role);
-             console.log('C0. Datos guardados en localStorage.');
-         } catch (e) {
-             console.error('C0. ERROR al guardar en localStorage:', e);
-             // Aunque la simulación fue exitosa, falló el guardado.
-             // Podrías manejar este error informando al usuario o retornando failure.
-             setLoading(false);
-             return { success: false, error: 'No se pudo guardar la sesión. Local Storage lleno.' };
-         }
+      if (user && user.password === password) {
+        // Simulamos respuesta de API exitosa
+        const token = `fake-token-${username}-${Date.now()}`;
+        const role = selectedRole; // En producción, el rol debe venir del backend
 
+        // Guardamos en localStorage
+        localStorage.setItem('authToken', token);
+        localStorage.setItem('userRole', role);
 
-         // Actualizamos el estado del contexto
-         console.log('C1. Intentando actualizar estado en AuthContext: isAuthenticated a true, userRole a', role);
-         setIsAuthenticated(true);
-         setUserRole(role);
-         console.log('C2. Estado en AuthContext actualizado (debería triggerear re-render).');
+        // Actualizamos estado
+        setIsAuthenticated(true);
+        setUserRole(role);
+        setLoading(false);
 
+        // Redirigimos según el rol
+        switch (role) {
+          case 'consultor':
+            navigate('/consultor');
+            break;
+          case 'gestora':
+            navigate('/gestora');
+            break;
+          case 'reclutador':
+            navigate('/reclutador');
+            break;
+          default:
+            navigate('/');
+        }
 
-         setLoading(false); // Terminó el proceso de login
-         console.log('D. Simulación de login exitoso. Devolviendo:', { success: true, role });
-         return { success: true, role }; // Retornamos éxito y el rol (el seleccionado en la simulación)
-
-      } else { // Si las credenciales NO coinciden
-        console.log('E. Credenciales de simulación NO válidas.');
-        setLoading(false); // Terminó el proceso de login con error
-        return { success: false, error: 'Credenciales incorrectas' }; // Retornamos fallo
+        return { success: true, role };
       }
-      // --- FIN DE SIMULACIÓN DE LOGIN ---
 
-    } catch (error) { // Capturamos cualquier error durante el proceso (ej: falla la llamada a la API real)
-      console.error("F. Error inesperado durante la función login:", error);
-      setLoading(false); // Terminó el proceso de login con error
-      // Retornamos fallo con el mensaje de error
-      return { success: false, error: error.message || 'Error interno del login' };
+      throw new Error('Credenciales incorrectas');
+    } catch (error) {
+      // Limpiamos el estado ante un error
+      setIsAuthenticated(false);
+      setUserRole(null);
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('userRole');
+      setLoading(false);
+      
+      return { 
+        success: false, 
+        error: error.message || 'Error durante el inicio de sesión' 
+      };
     }
   };
 
-  // Función para manejar el cierre de sesión
+  // Función para cerrar sesión
   const logout = () => {
-    console.log('AuthContext: Iniciando cierre de sesión...');
-    // Eliminamos la información del localStorage
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('userRole');
-    console.log('AuthContext: Eliminados datos de localStorage.');
-    // Reseteamos el estado del contexto
     setIsAuthenticated(false);
     setUserRole(null);
-    console.log('AuthContext: Estado de autenticación reseteado.');
-    // Opcional: Redirigir al usuario a la página de login después del logout
-    // navigate('/login'); // Necesitarías obtener navigate aquí o manejar la redirección en otro lado
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('userRole');
+    navigate('/login');
   };
 
-  // El proveedor expone el estado y las funciones a los componentes hijos
+  // Valor que proveerá el contexto
+  const contextValue = {
+    isAuthenticated,
+    userRole,
+    loading,
+    login,
+    logout
+  };
+
   return (
-    <AuthContext.Provider value={{ isAuthenticated, userRole, loading, login, logout }}>
-      {/* Renderizamos los hijos solo cuando la verificación inicial ha terminado (loading es false)
-          Esto evita renderizar la UI de la app antes de saber si el usuario ya estaba loggeado. */}
+    <AuthContext.Provider value={contextValue}>
+      {/* Solo renderiza children cuando haya terminado de verificar la autenticación */}
       {!loading && children}
-      {/* Opcional: Mostrar un indicador de carga global mientras loading es true */}
-      {loading && <div>Cargando autenticación inicial...</div>}
     </AuthContext.Provider>
   );
 };
 
-// Hook personalizado para facilitar el acceso al contexto de autenticación
-// Los componentes lo usan para obtener el estado y las funciones de autenticación
+// Hook personalizado para usar el contexto
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  // Si el hook se usa fuera de un AuthProvider, lanzamos un error
   if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error('useAuth debe usarse dentro de un AuthProvider');
   }
   return context;
 };
