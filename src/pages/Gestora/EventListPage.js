@@ -21,96 +21,66 @@ function EventListPage() {
   const navigate = useNavigate(); // <-- Inicializa useNavigate
 
   useEffect(() => {
-    // Función para cargar los eventos
-    const loadEvents = async () => {
-      try {
-        setLoading(true);
-        // const data = await fetchEvents(); // Llama a tu función API para obtener eventos
-        // Simulación de datos mientras implementas la API real
-        const data = [
-            {
-                id: '1',
-                title: 'Taller de Economía Popular',
-                location: 'Auditorio Principal',
-                date: '2025-11-13',
-                time: '09:00',
-                modality: 'Presencial',
-                status: 'Programado',
-                instructor: 'Andreina Ustate',
-                participants: 45
-            },
-            {
-                id: '2',
-                title: 'Marketing Digital para Emprendedores',
-                location: 'Plataforma Virtual',
-                date: '2025-11-16',
-                time: '14:00',
-                modality: 'Virtual',
-                status: 'Programado',
-                instructor: 'Julie Sáenz Castañeda',
-                participants: 32
-            },
-             {
-                id: '3',
-                title: 'Estrategias Financieras - Sector Moda',
-                location: 'Sede Norte',
-                date: '2025-11-21',
-                time: '10:30',
-                modality: 'Hibrida',
-                status: 'Programado',
-                instructor: 'Tatiana Prieto',
-                participants: 28
-            },
-             {
-                id: '4',
-                title: 'Innovación y Modelos de Negocio',
-                location: 'Centro de Innovación',
-                date: '2025-11-24',
-                time: '08:00',
-                modality: 'Presencial',
-                status: 'Programado',
-                instructor: 'Johana Suescun',
-                participants: 36
-            },
-             {
-                id: '5',
-                title: 'Gestión de Proyectos Ágiles',
-                location: 'Sala Virtual 3',
-                date: '2025-11-13', // Same date as event 1 for testing date filter
-                time: '11:00', // Different time for testing time filter
-                modality: 'Virtual',
-                status: 'Completado',
-                instructor: 'Pedro Ramírez',
-                participants: 25
-            },
-            // Agrega más eventos de ejemplo si es necesario
-        ];
-        setEvents(data);
-        setLoading(false);
-      } catch (err) {
-        setError('Error al cargar los eventos.');
-        setLoading(false);
-        console.error(err);
-      }
-    };
+  const loadEvents = () => {
+    try {
+      setLoading(true);
+      const storedEvents = JSON.parse(localStorage.getItem('eventos')) || [];
+if (storedEvents.length === 0) {
+  const defaultEvents = [
+    {
+      id: 1,
+      title: 'Clase de React Básico',
+      date: '2025-05-20',
+      time: '10:00',
+      instructor: 'Juan Pérez',
+      location: 'Aula 1',
+      modality: 'Presencial',
+      status: 'Programado',
+    },
+    {
+      id: 2,
+      title: 'Taller de CSS Grid',
+      date: '2025-05-22',
+      time: '14:00',
+      instructor: 'Laura Gómez',
+      location: 'Online',
+      modality: 'Virtual',
+      status: 'Programado',
+    },
+  ];
+  localStorage.setItem('eventos', JSON.stringify(defaultEvents)); // <-- CLAVE CORREGIDA
+  setEvents(defaultEvents);
+} else {
+  setEvents(storedEvents);
+}
 
-    loadEvents();
-  }, []); // Se ejecuta solo una vez al montar el componente
 
-  // Función para manejar la eliminación de un evento
-  const handleDelete = async (id) => {
-    if (window.confirm('¿Estás seguro de que quieres eliminar este evento?')) {
-      try {
-        // await deleteEvent(id); // Llama a tu función API para eliminar evento
-        setEvents(events.filter(event => event.id !== id)); // Elimina el evento del estado local
-        alert('Evento eliminado con éxito.'); // Usa un mensaje box si tienes uno
-      } catch (err) {
-        setError('Error al eliminar el evento.');
-        console.error(err);
-        // alert('Error al eliminar el evento.'); // Usa un mensaje box si tienes uno
-      }
+      setLoading(false);
+    } catch (err) {
+      setError('Error al cargar los eventos.');
+      setLoading(false);
     }
   };
+
+  loadEvents();
+}, []);
+
+
+  // Función para manejar la eliminación de un evento
+  const handleDelete = (id) => {
+  if (window.confirm('¿Estás seguro de que quieres eliminar este evento?')) {
+    try {
+      const updatedEvents = events.filter(event => event.id !== id);
+      setEvents(updatedEvents);
+      localStorage.setItem('events', JSON.stringify(updatedEvents));
+      alert('Evento eliminado con éxito.');
+    } catch (err) {
+      setError('Error al eliminar el evento.');
+      console.error(err);
+    }
+  }
+};
+
 
   // Función para manejar la edición de un evento (redirigir a la página de edición)
   const handleEdit = (id) => {

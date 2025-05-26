@@ -7,6 +7,9 @@ import "./NuevaProgramacionPage.css";
 import { colors } from "../../colors";
 import * as XLSX from "xlsx";
 import { useNavigate } from 'react-router-dom'; // Importa useNavigate
+import { getConsultores, saveConsultores } from '../../data/dataConsultores';
+
+
 
 function NuevaProgramacionPage() {
   const [inputMethod, setInputMethod] = useState("manual");
@@ -45,6 +48,7 @@ function NuevaProgramacionPage() {
   const [emailConsultor, setEmailConsultor] = useState("");
   const [celular, setCelular] = useState("");
   const [direccion, setDireccion] = useState("");
+  const [especialidad, setEspecialidad] = useState("");
   // Otros estados
   const [tipoVinculacion, setTipoVinculacion] = useState("");
   const [horasPagarDocente, setHorasPagarDocente] = useState("");
@@ -63,6 +67,7 @@ function NuevaProgramacionPage() {
   const [programasFiltrados, setProgramasFiltrados] = useState([]);
   const [rutasFiltradas, setRutasFiltradas] = useState([]);
   const [sectoresFiltrados, setSectoresFiltrados] = useState([]);
+  const [consultores, setConsultores] = useState([]);
 
   // =========================================================================
 
@@ -70,30 +75,7 @@ function NuevaProgramacionPage() {
   // Datos Mock de Consultores (En una app real, esto vendría de una API)
   // =========================================================================
   
-  const mockConsultores = [
-    {
-      nombre: "Julie Sáenz",
-      cedula: "1012345678",
-      email: "julie.saenz@example.com",
-      celular: "3001112233",
-      direccion: "Calle 1 # 2-3",
-    },
-    {
-      nombre: "Andreína Ustate",
-      cedula: "1098765432",
-      email: "andreina.ustate@example.com",
-      celular: "3104445566",
-      direccion: "Avenida 4 # 5-6",
-    },
-    {
-      nombre: "Carlos Rojas",
-      cedula: "1122334455",
-      email: "carlos.rojas@example.com",
-      celular: "3207778899",
-      direccion: "Carrera 7 # 8-9",
-    },
-    // Añade más consultores ficticios aquí
-  ];
+  
   // =========================================================================
 
   const clasificacionOption = [80000, 85000, 90000, 95000, 100000, 105000];
@@ -393,106 +375,86 @@ function NuevaProgramacionPage() {
   // =========================================================================
   // Función para manejar el cambio en el campo Nombre del Consultor
   // =========================================================================
+  
   const handleNombreConsultorChange = (e) => {
   const nombre = e.target.value;
   setNombreConsultor(nombre);
 
   // Buscar el consultor por nombre
-  const consultor = mockConsultores.find(c => c.nombre === nombre);
+  const consultores = getConsultores();
+  const consultor = consultores.find(c => c.nombre === nombre);
+
 
   if (consultor) {
     setCedula(consultor.cedula);
     setEmailConsultor(consultor.email);
     setCelular(consultor.celular);
     setDireccion(consultor.direccion);
+    setEspecialidad(consultor.especialidad);
+    setNumeroOAMPConsultor(consultor.consecutivoOAMP);
+    setFechaInicioOAMPConsultor(consultor.fechaFirmaOAMP)
   } else {
     // Si no encuentra coincidencia, limpia los campos
     setCedula("");
     setEmailConsultor("");
     setCelular("");
     setDireccion("");
+    setEspecialidad("");
+    setNumeroOAMPConsultor("");
+    setFechaInicioOAMPConsultor("");
   }
 };
+useEffect(() => {
+  const consultoresAlmacenados = getConsultores();
+  setConsultores(consultoresAlmacenados);
+}, []);
 
   // =========================================================================
   const handleManualSubmit = (e) => {
   e.preventDefault();
 
   const nuevoEvento = {
-    id: Date.now().toString(), // Generar ID único
+    id: Date.now().toString(),
     title: tematica,
     program: programa,
-    location: sector,
-    date: fechaFormacion, // puedes usar el valor real de tu input
+    sector: sector,
+    location: lugar,
+    date: fechaFormacion,
     time: horaInicio,
+    endTime: horaFin,
     modality: modalidad,
     status: estadoActividad,
     instructor: nombreConsultor,
+    specialty: especialidad,
     participants: numeroAsistentes,
   };
 
-  // Obtiene eventos existentes desde localStorage
+  // Guardar evento en eventos generales
   const eventosGuardados = JSON.parse(localStorage.getItem("eventos")) || [];
-
-  // Agrega el nuevo
   const nuevosEventos = [...eventosGuardados, nuevoEvento];
   localStorage.setItem("eventos", JSON.stringify(nuevosEventos));
 
+  // ACTUALIZAR assignedEvents del consultor
+  const consultores = getConsultores();
+
+  const indexConsultor = consultores.findIndex(c => c.nombre === nombreConsultor);
+  if (indexConsultor !== -1) {
+    // Añadir nuevo evento a assignedEvents del consultor
+    if (!consultores[indexConsultor].assignedEvents) {
+      consultores[indexConsultor].assignedEvents = [];
+    }
+    consultores[indexConsultor].assignedEvents.push(nuevoEvento);
+
+    // Guardar consultores actualizados
+    saveConsultores(consultores);
+  }
+
   alert("Programación guardada exitosamente");
 
-  // Redirige al dashboard si deseas
+  // Redirigir (recuerda definir navigate con useNavigate)
   navigate("/gestora");
 };
 
-/** 
-  const handleManualSubmit = (event) => {
-    event.preventDefault();
-    const formData = {
-      ruta,
-      sector,
-      programa,
-      coordinadorCCB,
-      numeroContrato,
-      codigoAgenda,
-      tematica,
-      mes,
-      fechaFormacion,
-      dia,
-      horaInicio,
-      horaFin,
-      horasProgramadasTaller,
-      tipoActividad,
-      modalidad,
-      lugar,
-      region,
-      enlaceVirtual,
-      envioProgramacion,
-      estadoActividad,
-      numeroAsistentes,
-      nombreConsultor,
-      cedula,
-      emailConsultor,
-      celular,
-      direccion,
-      tipoVinculacion,
-      horasPagarDocente,
-      horasCobrarCCB,
-      clasificacionValorHora,
-      valorHora,
-      gastosTraslado,
-      valorTotalPagarDocente,
-      valorHoraCobrarCCB,
-      valorTotalCobrarCCB,
-      numeroOAMPConsultor,
-      fechaInicioOAMPConsultor,
-      entregables,
-      dependencia,
-      observaciones,
-    };
-    console.log("Datos del formulario manual:", formData);
-    alert("Formulario manual enviado. Revisa la consola para ver los datos.");
-  };
-*/
   function convertExcelTimeTo24HourFormat(timeStr) {
   // Ej: "2:30 PM" -> "14:30"
   if (typeof timeStr !== 'string') return '';
@@ -854,6 +816,7 @@ function convertExcelTime(value) {
                       id="numeroAsistentes"
                       value={numeroAsistentes}
                       onChange={(e) => setNumeroAsistentes(e.target.value)}
+                      required
                     />
                   </div>
 
@@ -1063,7 +1026,7 @@ function convertExcelTime(value) {
   required
 >
   <option value="">Seleccione un consultor</option>
-  {mockConsultores.map((c) => (
+  {consultores.map((c) => (
     <option key={c.cedula} value={c.nombre}>
       {c.nombre}
     </option>
@@ -1119,6 +1082,19 @@ function convertExcelTime(value) {
                       id="direccion"
                       value={direccion}
                       onChange={(e) => setDireccion(e.target.value)} // Permite edición manual
+                      required
+                      readOnly // Opcional: Solo lectura
+                    />
+                  </div>
+
+                  {/* Campo: Especialidad - SE LLENARÁ AUTOMATICAMENTE */}
+                  <div className="form-group">
+                    <label htmlFor="especialidad">Especialidad</label>
+                    <input
+                      type="text"
+                      id="especialidad"
+                      value={especialidad}
+                      onChange={(e) => setEspecialidad(e.target.value)} // Permite edición manual
                       required
                       readOnly // Opcional: Solo lectura
                     />

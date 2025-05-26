@@ -12,11 +12,13 @@ const ConsultorSidebar = ({ isOpen, toggleSidebar }) => {
   // Enlaces de navegación principales
   const navLinks = [
     { name: 'Calendario', path: '/consultor/dashboard' },
-    { name: 'Eventos', path: '/consultor/events' }, // <-- Nuevo enlace a la página de eventos
+    { name: 'Eventos', path: '/consultor/events' },
+    { name: 'Pagos', path: '/consultor/payments' },
+    { name: 'Mi Perfil', path: '/consultor/profile' }, // <-- Nuevo enlace a la página de perfil
     // Puedes añadir más enlaces principales aquí
   ];
 
-  // Función para manejar el cierre de sesión
+  // Función para manejar el cierre de sesión 
   const handleLogout = () => {
     logout(); // Llama a la función logout de tu contexto
     // La redirección al login se manejará automáticamente si tu contexto

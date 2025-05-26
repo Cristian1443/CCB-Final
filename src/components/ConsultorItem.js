@@ -9,7 +9,8 @@ import './ConsultorItem.css'; // Importa los estilos para este componente
 function ConsultorItem({ consultor, onEdit, onDelete }) {
     // Extrae las propiedades del objeto consultor. Asegúrate de que tu objeto consultor tenga estas propiedades.
     // Si tus datos mock o reales tienen nombres de propiedades diferentes, ajústalos aquí.
-    const { id, nombre, especialidad, contacto, eventos } = consultor;
+    const { cedula, nombre, especialidad, contacto, eventos } = consultor;
+
 
     // Función para obtener las iniciales del nombre para el avatar
     const getInitials = (name) => {
@@ -27,13 +28,13 @@ function ConsultorItem({ consultor, onEdit, onDelete }) {
     // Llaman a las funciones pasadas como props (onEdit, onDelete)
     const handleEditClick = () => {
         if (onEdit) {
-            onEdit(id); // Llama a la prop onEdit pasando el ID del consultor
+            onEdit(cedula); // Llama a la prop onEdit pasando el ID del consultor
         }
     };
 
     const handleDeleteClick = () => {
        if (onDelete) {
-            onDelete(id); // Llama a la prop onDelete pasando el ID del consultor
+            onDelete(cedula); // Llama a la prop onDelete pasando el ID del consultor
         }
     };
 

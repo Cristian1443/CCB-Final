@@ -1,0 +1,326 @@
+.postulaciones-container {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.header-section {
+  margin-bottom: 2rem;
+}
+
+.titulo-seccion h2 {
+  color: var(--primary-color);
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.titulo-seccion p {
+  color: var(--text-secondary);
+}
+
+.filtros-section {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.filtro-select {
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  min-width: 200px;
+}
+
+.postulaciones-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 2rem;
+}
+
+.postulacion-card {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.postulacion-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15);
+}
+
+.postulacion-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.postulacion-header h3 {
+  color: var(--primary-color);
+  font-size: 1.25rem;
+  margin: 0;
+}
+
+.estado {
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.estado.en-revision {
+  background: var(--warning-color);
+  color: var(--text-primary);
+}
+
+.estado.entrevista-programada {
+  background: var(--primary-color);
+  color: white;
+}
+
+.estado.seleccionado {
+  background: var(--success-color);
+  color: white;
+}
+
+.estado.rechazado {
+  background: var(--danger-color);
+  color: white;
+}
+
+.postulacion-info {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+  margin: 1rem 0;
+}
+
+.info-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.info-item i {
+  color: var(--primary-color);
+}
+
+.etapa-actual {
+  margin: 1.5rem 0;
+}
+
+.etapa-actual h4 {
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+}
+
+.etapas-progreso {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+}
+
+.etapa {
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.875rem;
+  background: var(--background-color);
+  color: var(--text-secondary);
+  white-space: nowrap;
+  position: relative;
+}
+
+.etapa.completada {
+  background: var(--primary-color);
+  color: white;
+}
+
+.etapa:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  right: -0.25rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0.5rem;
+  height: 0.5rem;
+  background: var(--border-color);
+  border-radius: 50%;
+}
+
+.postulacion-acciones {
+  display: flex;
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+
+.select-estado,
+.select-etapa {
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  min-width: 150px;
+}
+
+.btn-ver-perfil {
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+}
+
+.btn-ver-perfil:hover {
+  background: var(--secondary-color);
+  transform: translateY(-2px);
+}
+
+.postulacion-notas {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.postulacion-notas h4 {
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.postulacion-notas p {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+/* Modal de detalle del candidato */
+.modal-detalle {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  width: 90%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.modal-header h3 {
+  color: var(--primary-color);
+  margin: 0;
+}
+
+.btn-cerrar {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 1.25rem;
+  padding: 0.5rem;
+  transition: color 0.2s ease;
+}
+
+.btn-cerrar:hover {
+  color: var(--danger-color);
+}
+
+.candidato-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.info-seccion {
+  padding: 1rem;
+  background: var(--background-color);
+  border-radius: 8px;
+}
+
+.info-seccion h4 {
+  color: var(--primary-color);
+  margin-bottom: 1rem;
+}
+
+.info-seccion p {
+  margin: 0.5rem 0;
+  color: var(--text-secondary);
+}
+
+.info-seccion strong {
+  color: var(--text-primary);
+}
+
+.info-seccion a {
+  color: var(--primary-color);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: color 0.2s ease;
+}
+
+.info-seccion a:hover {
+  color: var(--secondary-color);
+}
+
+@media (max-width: 768px) {
+  .postulaciones-container {
+    padding: 1rem;
+  }
+
+  .filtros-section {
+    flex-direction: column;
+  }
+
+  .filtro-select {
+    width: 100%;
+  }
+
+  .postulacion-info {
+    grid-template-columns: 1fr;
+  }
+
+  .postulacion-acciones {
+    flex-direction: column;
+  }
+
+  .select-estado,
+  .select-etapa,
+  .btn-ver-perfil {
+    width: 100%;
+  }
+
+  .modal-content {
+    padding: 1rem;
+    width: 95%;
+  }
+}

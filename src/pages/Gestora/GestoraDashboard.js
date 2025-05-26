@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom'; // Importa useNavigate
+import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '../../components/DashboardLayout';
-import EventItem from '../../components/EventItem'; // Asegúrate de que esta ruta sea correcta
-import './GestoraDashboard.css'; // Asegúrate de que esta importación exista
-// Importa iconos si los usas, por ejemplo:
-// import { FaPlus, FaArrowRight } from 'react-icons/fa';
+import EventItem from '../../components/EventItem';
+import './GestoraDashboard.css';
+import { FaPlus, FaArrowRight, FaCalendarAlt, FaUsers, FaClock } from 'react-icons/fa';
 
 // Datos de ejemplo para los próximos eventos en el Dashboard
 const upcomingMockEvents = [
@@ -55,131 +54,186 @@ const upcomingMockEvents = [
     // Puedes añadir más eventos próximos aquí
 ];
 
-
 function GestoraDashboard() {
-    // Obtiene la función de navegación proporcionada por react-router-dom
     const navigate = useNavigate();
-
-    const [scheduledEventsCount, setScheduledEventsCount] = useState(10);
-    const [instructorsCount, setInstructorsCount] = useState(8);
-    const [nextEvent, setNextEvent] = useState({
-        title: 'Taller de Economía Popular',
-        date: '14 nov'
-    });
-
+    const [scheduledEventsCount, setScheduledEventsCount] = useState(0);
+    const [instructorsCount, setInstructorsCount] = useState(0);
+    const [nextEvent, setNextEvent] = useState({ title: '', date: '' });
     const [upcomingEvents, setUpcomingEvents] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
-/** 
+    // Detectar cambios en el tamaño de la pantalla
+    useEffect(() => {
+        const handleResize = () => {
+            setIsMobile(window.innerWidth <= 768);
+        };
+
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
+    function getNextEvent(events) {
+        const now = new Date();
+        const upcoming = events
+            .map(e => ({
+                ...e,
+                dateTime: new Date(`${e.date}T${e.time}`)
+            }))
+            .filter(e => e.dateTime > now)
+            .sort((a, b) => a.dateTime - b.dateTime);
+
+        return upcoming[0] || null;
+    }
+
     useEffect(() => {
         setLoading(true);
-        try {
-            // Simula la carga de datos con un pequeño retraso
-            setTimeout(() => {
-                setUpcomingEvents(upcomingMockEvents);
-                setLoading(false);
-            }, 500);
 
+        try {
+            const eventosGuardados = JSON.parse(localStorage.getItem("eventos")) || [];
+            const eventosFinales = eventosGuardados.length > 0 ? eventosGuardados : upcomingMockEvents;
+
+            // Ordenar eventos por fecha
+            const eventosFiltrados = eventosFinales.sort((a, b) => {
+                const dateA = new Date(`${a.date}T${a.time}`);
+                const dateB = new Date(`${b.date}T${b.time}`);
+                return dateA - dateB;
+            });
+
+            setUpcomingEvents(eventosFiltrados);
+            setScheduledEventsCount(eventosFiltrados.length);
+
+            const instructoresUnicos = [...new Set(eventosFiltrados.map(evento => evento.instructor))];
+            setInstructorsCount(instructoresUnicos.length);
+
+            const eventoMasProximo = getNextEvent(eventosFiltrados);
+            if (eventoMasProximo) {
+                const opcionesFecha = { 
+                    day: 'numeric', 
+                    month: 'short',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                };
+                const fechaFormateada = new Date(`${eventoMasProximo.date}T${eventoMasProximo.time}`)
+                    .toLocaleDateString('es-ES', opcionesFecha);
+
+                setNextEvent({
+                    title: isMobile && eventoMasProximo.title.length > 20 
+                        ? eventoMasProximo.title.substring(0, 20) + '...' 
+                        : eventoMasProximo.title,
+                    date: fechaFormateada,
+                    location: eventoMasProximo.location,
+                    modality: eventoMasProximo.modality
+                });
+            } else {
+                setNextEvent({ 
+                    title: "Sin eventos futuros", 
+                    date: "",
+                    location: "",
+                    modality: "" 
+                });
+            }
+
+            setLoading(false);
         } catch (err) {
-            setError('Error al cargar los datos del dashboard.');
+            setError("Error al cargar los datos del dashboard.");
             setLoading(false);
             console.error(err);
         }
+    }, [isMobile]);
 
-    }, []);
-*/
-useEffect(() => {
-  setLoading(true);
-
-  try {
-    const eventosGuardados = JSON.parse(localStorage.getItem("eventos")) || [];
-    
-    // Si no hay ninguno, usa los eventos de ejemplo
-    const eventosFinales = eventosGuardados.length > 0
-      ? eventosGuardados
-      : upcomingMockEvents;
-
-    setUpcomingEvents(eventosFinales);
-    setLoading(false);
-  } catch (err) {
-    setError("Error al cargar los datos del dashboard.");
-    setLoading(false);
-    console.error(err);
-  }
-}, []);
-
-
-    // Función para manejar la eliminación de un evento (funcionalidad no completa en este ejemplo)
     const handleDeleteUpcomingEvent = (id) => {
-        console.log('Eliminar próximo evento con ID:', id);
-        setUpcomingEvents(upcomingEvents.filter(event => event.id !== id));
-        alert('Funcionalidad de eliminar próximo evento no implementada completamente.');
+        if (window.confirm('¿Estás seguro de que deseas eliminar este evento?')) {
+            const updatedEvents = upcomingEvents.filter(event => event.id !== id);
+            setUpcomingEvents(updatedEvents);
+            localStorage.setItem("eventos", JSON.stringify(updatedEvents));
+            setScheduledEventsCount(updatedEvents.length);
+        }
     };
 
-    // Función para manejar la edición de un evento próximo
-    // ***** CAMBIO: Ahora navega a la página de edición *****
     const handleEditUpcomingEvent = (id) => {
-        console.log('Navegando a editar evento con ID:', id);
-        // Navega a la ruta de edición, pasando el ID del evento
-        // ASEGÚRATE DE QUE LA RUTA '/gestora/eventos/editar/:id' ESTÁ CONFIGURADA EN TU App.js
         navigate(`/gestora/eventos/editar/${id}`);
     };
 
-    // Función clave: Maneja el clic del botón "Nueva Programación"
-    // Modifica esta función para navegar a la página de creación de eventos
     const handleNewEventClick = () => {
-        console.log('Clic en Nueva Programación. Navegando...');
-        // Utiliza la función navigate para ir a la ruta de la página de nueva programación
-        // Asume que la ruta para crear un nuevo evento es '/gestora/nuevo-evento'
-        // ¡IMPORTANTE! Esta ruta debe coincidir con la definida en tu archivo de rutas (ej: App.js)
-        navigate('/gestora/nuevo-evento');
+        navigate('/gestora/nueva-programacion');
     };
 
-    // Modifica esta función para navegar a la página de lista de eventos
     const handleViewAllEventsClick = () => {
-        console.log('Clic en Ver todos los eventos. Navegando...');
-        // Asume que la ruta para la lista de eventos es '/gestora/eventos'
-        // ¡IMPORTANTE! Esta ruta debe coincidir con la definida en tu archivo de rutas (ej: App.js)
         navigate('/gestora/eventos');
     };
 
+    const renderSummaryCard = (icon, title, value) => (
+        <div className="card">
+            <div className="card-icon">
+                {icon}
+            </div>
+            <div className="card-content">
+                <h2>{title}</h2>
+                <p>{value}</p>
+            </div>
+        </div>
+    );
 
     return (
         <DashboardLayout>
             <div className="dashboard-container">
                 <div className="dashboard-header">
-                    <h1>Dashboard</h1>
+                    <h1>Panel de Gestión</h1>
                 </div>
 
                 <div className="summary-cards">
-                    <div className="card">
-                        <h2>Eventos Programados</h2>
-                        <p>{scheduledEventsCount}</p>
-                    </div>
-                    <div className="card">
-                        <h2>Instructores</h2>
-                        <p>{instructorsCount}</p>
-                    </div>
-                    <div className="card">
-                        <h2>Próximo Evento</h2>
-                        <p>{nextEvent.title} - {nextEvent.date}</p>
-                    </div>
+                    {renderSummaryCard(
+                        <FaCalendarAlt className="card-icon-svg" />,
+                        "Eventos Programados",
+                        scheduledEventsCount
+                    )}
+                    {renderSummaryCard(
+                        <FaUsers className="card-icon-svg" />,
+                        "Instructores",
+                        instructorsCount
+                    )}
+                    {renderSummaryCard(
+                        <FaClock className="card-icon-svg" />,
+                        "Próximo Evento",
+                        <div className="next-event-info">
+                            <span className="event-title">{nextEvent.title}</span>
+                            {nextEvent.date && (
+                                <div className="event-details">
+                                    <span className="event-date">{nextEvent.date}</span>
+                                    {nextEvent.location && (
+                                        <span className="event-location">{nextEvent.location}</span>
+                                    )}
+                                    {nextEvent.modality && (
+                                        <span className={`event-modality ${nextEvent.modality.toLowerCase()}`}>
+                                            {nextEvent.modality}
+                                        </span>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </div>
 
                 <div className="upcoming-events-section">
                     <div className="section-header">
                         <h2>Próximos Eventos</h2>
-                        {/* El botón llama a la función de navegación cuando se hace clic */}
                         <button onClick={handleNewEventClick} className="new-event-button">
-                            {/* <FaPlus /> */} Nueva Programación
+                            <FaPlus className="button-icon" />
+                            {isMobile ? 'Nueva' : 'Nueva Programación'}
                         </button>
                     </div>
 
                     {loading ? (
-                        <p>Cargando próximos eventos...</p>
+                        <div className="loading-state">
+                            <div className="loading-spinner"></div>
+                            <p>Cargando eventos...</p>
+                        </div>
                     ) : error ? (
-                        <p className="error-message">{error}</p>
+                        <div className="error-message">
+                            <p>{error}</p>
+                        </div>
                     ) : upcomingEvents.length > 0 ? (
                         <div className="upcoming-events-list">
                             {upcomingEvents.map(event => (
@@ -188,24 +242,31 @@ useEffect(() => {
                                     event={event}
                                     onEdit={handleEditUpcomingEvent}
                                     onDelete={handleDeleteUpcomingEvent}
+                                    isMobile={isMobile}
                                 />
                             ))}
                         </div>
                     ) : (
-                        <p className="no-upcoming-events">No hay próximos eventos programados.</p>
+                        <div className="no-upcoming-events">
+                            <p>No hay eventos programados.</p>
+                            <button onClick={handleNewEventClick} className="create-event-button">
+                                Crear nuevo evento
+                            </button>
+                        </div>
                     )}
 
-                   <div className="view-all-link">
-                        {/* El botón "Ver todos los eventos" también usa la navegación */}
-                        <button onClick={handleViewAllEventsClick} className="link-button">
-                             {/* <FaArrowRight /> */} Ver todos los eventos
-                        </button>
-                   </div>
-
+                    {upcomingEvents.length > 0 && (
+                        <div className="view-all-link">
+                            <button onClick={handleViewAllEventsClick} className="link-button">
+                                <span>Ver todos los eventos</span>
+                                <FaArrowRight className="button-icon" />
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
         </DashboardLayout>
     );
 }
 
-export default GestoraDashboard; // Asegúrate de exportar el componente
+export default GestoraDashboard;

@@ -31,6 +31,7 @@ function Sidebar() {
     { path: '/gestora/eventos', label: 'Eventos' },
     { path: '/gestora/consultores', label: 'Consultores' },
     { path: '/gestora/evidencias', label: 'Evidencias' },
+    { path: '/gestora/informe-ccb', label: 'Informe CCB'}
   ];
 
   const toggleSidebar = () => {

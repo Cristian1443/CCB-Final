@@ -5,13 +5,13 @@
     --complement: #394a9e; /* Azul un poco más claro */
     --textPrimary: #333;
     --textSecondary: #555;
-    --border: #ccc;
+    --border: #eee;
     --background: #fff;
     --light-background: #f8f9fa; /* Fondo ligeramente gris, similar al anterior */
     --shadow-color: rgba(0, 0, 0, 0.1); /* Color de sombra */
     --card-background: #ffffff; /* Fondo para las tarjetas de evento */
-    --card-shadow: 0 2px 5px rgba(0, 0, 0, 0.05); /* Sombra ajustada */
-    --input-border: #ccc; /* Borde de input */
+    --card-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); /* Sombra ajustada */
+    --input-border: #ddd; /* Borde de input */
     --input-focus-border: var(--complement);
 
     /* Colores para estados de evento (ejemplo) */
@@ -22,174 +22,221 @@
 
 /* Estilos generales para el contenedor de la lista de eventos */
 .event-list-container {
-    padding: 2rem; /* Espaciado interior */
-    background-color: var(--light-background); /* Fondo ligeramente gris */
-    border-radius: 12px; /* Bordes redondeados */
-    box-shadow: 0 4px 8px var(--shadow-color); /* Sombra suave */
-    margin-top: 2rem; /* Margen superior para separarlo del layout principal */
-    max-width: 1200px; /* Ancho máximo */
-    margin-left: auto; /* Centrar el contenedor */
-    margin-right: auto; /* Centrar el contenedor */
+    padding: 0.75rem;
+    background-color: var(--light-background);
+    border-radius: 8px;
+    box-shadow: 0 2px 4px var(--shadow-color);
+    margin: 0.75rem;
+    width: calc(100% - 1.5rem);
+    box-sizing: border-box;
     font-family: 'Inter', sans-serif; /* Fuente consistente con el dashboard */
 }
 
 /* Estilos para el encabezado de la lista */
 .list-header {
-    display: flex; /* Usar flexbox para alinear elementos */
-    justify-content: space-between; /* Espacio entre el título y las acciones */
-    align-items: center; /* Alinear verticalmente */
-    margin-bottom: 1.5rem; /* Margen inferior */
-    padding-bottom: 1rem; /* Espaciado inferior */
-    border-bottom: 1px solid var(--border); /* Línea separadora usando el color de borde */
-    flex-wrap: wrap; /* Permite que los elementos se envuelvan en pantallas pequeñas */
-    gap: 1rem; /* Espacio entre el título y las acciones */
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border);
 }
 
 .list-header h2 {
-    margin: 0; /* Eliminar margen predeterminado del título */
-    color: var(--textPrimary); /* Color oscuro para el título */
-    font-size: 1.8rem; /* Tamaño de fuente del título */
-    font-weight: 600; /* Grosor de la fuente */
-    flex-grow: 1; /* Permite que el título ocupe el espacio restante */
-    min-width: 200px; /* Asegura que el título no se encoja demasiado */
+    margin: 0;
+    color: var(--textPrimary);
+    font-size: 1.25rem;
+    font-weight: 600;
 }
 
 /* Estilos para la sección de acciones en el encabezado (donde irán los botones) */
 .header-actions {
-    display: flex;
-    gap: 1rem; /* Espacio entre botones */
-    flex-wrap: wrap; /* Permite que los botones se envuelvan si no hay espacio */
-    justify-content: flex-end; /* Alinea los botones a la derecha */
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+    width: 100%;
 }
 
 /* ** Estilos para los nuevos botones de acción en el encabezado ** */
 .btn-add-programacion,
 .btn-go-to-dashboard {
-    padding: 0.8rem 1.2rem; /* Espaciado interior */
-    border-radius: 8px; /* Bordes redondeados */
-    cursor: pointer; /* Cursor de mano */
-    font-size: 0.95rem; /* Tamaño de fuente */
-    font-weight: 600; /* Grosor de la fuente */
-    transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out, box-shadow 0.2s ease-in-out; /* Transiciones suaves */
-    border: 1px solid transparent; /* Borde por defecto transparente */
-    white-space: nowrap; /* Evita que el texto se rompa en varias líneas */
+    padding: 0.75rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+    width: 100%;
 }
 
 .btn-add-programacion {
-    background-color: var(--complement); /* Fondo azul usando el color complementario */
-    color: var(--background); /* Texto blanco */
-    border-color: var(--complement); /* Borde del mismo color */
+    background-color: var(--complement);
+    color: var(--background);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .btn-add-programacion:hover {
-    background-color: var(--secondary); /* Fondo azul oscuro al pasar el ratón */
-    border-color: var(--secondary); /* Borde azul oscuro al pasar el ratón */
-    box-shadow: 0 2px 8px rgba(57, 74, 158, 0.2); /* Sombra suave al pasar el ratón */
+    background-color: var(--secondary);
 }
 
 .btn-go-to-dashboard {
-    background-color: transparent; /* Fondo transparente */
-    color: var(--textPrimary); /* Color del texto principal */
-    border-color: var(--border); /* Borde gris usando el color de borde */
+    background-color: transparent;
+    color: var(--textPrimary);
+    border-color: var(--border);
 }
 
 .btn-go-to-dashboard:hover {
-    background-color: var(--border); /* Fondo gris claro al pasar el ratón */
-    color: var(--secondary); /* Texto azul oscuro al pasar el ratón */
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); /* Sombra suave al pasar el ratón */
+    background-color: var(--light-background);
 }
-
 
 /* Estilos para la sección de filtros */
 .filter-section {
-    display: flex; /* Usar flexbox para alinear los filtros */
-    gap: 1rem; /* Espacio entre los elementos de filtro */
-    margin-bottom: 2rem; /* Margen inferior */
-    flex-wrap: wrap; /* Permitir que los filtros se envuelvan en pantallas pequeñas */
-    align-items: center; /* Alinear verticalmente los elementos de filtro */
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
 }
 
 /* Estilos para los inputs de filtro (texto, fecha, hora) */
 .filter-input,
 .filter-select {
-    padding: 0.75rem 1rem; /* Espaciado interior */
-    border: 1px solid var(--border); /* Borde suave usando el color de borde */
-    border-radius: 8px; /* Bordes redondeados */
-    font-size: 1rem; /* Tamaño de fuente */
-    color: var(--textPrimary); /* Color del texto */
-    background-color: var(--background); /* Fondo blanco */
-    transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out; /* Transición suave al enfocar */
-    flex-grow: 1; /* Permitir que los inputs crezcan para llenar espacio */
-    min-width: 150px; /* Ancho mínimo para cada filtro */
+    padding: 0.75rem;
+    border: 1px solid var(--input-border);
+    border-radius: 6px;
+    font-size: 0.9rem;
+    color: var(--textPrimary);
+    background-color: var(--background);
+    width: 100%;
+    box-sizing: border-box;
+    transition: all 0.2s ease;
 }
 
 .filter-input:focus,
 .filter-select:focus {
-    border-color: var(--primary); /* Color del borde al enfocar usando el color primario */
-    box-shadow: 0 0 0 0.2rem rgba(228, 2, 44, 0.25); /* Sombra al enfocar usando el color primario con transparencia */
-    outline: none; /* Eliminar el contorno predeterminado */
+    border-color: var(--complement);
+    box-shadow: 0 0 0 2px rgba(57, 74, 158, 0.1);
+    outline: none;
 }
 
 /* Estilos específicos para el select de filtro */
 .filter-select {
-    appearance: none; /* Eliminar apariencia nativa del select */
-    /* Flecha personalizada - ajustada para usar el color del texto secundario */
-    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%20viewBox%3D%220%200%20292.4%20292.4%22%3E%3Cpath%20fill%3D%22%23555555%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E');
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23555' viewBox='0 0 16 16'%3E%3Cpath d='M8 10.5l-4-4h8l-4 4z'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
-    background-position: right 1rem center;
-    background-size: 0.65em auto;
-    padding-right: 2.5rem; /* Espacio para la flecha personalizada */
+    background-position: right 0.75rem center;
+    padding-right: 2rem;
 }
 
 /* Estilos para la lista de elementos de evento */
 .event-items-list {
-    display: grid; /* Usar grid para la lista */
-    gap: 1.5rem; /* Espacio entre los elementos de la cuadrícula */
-    /* Configuración de columnas responsiva */
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); /* Columnas flexibles */
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
 }
 
 /* Estilos para el mensaje cuando no hay eventos */
-.no-events-message {
-    text-align: center; /* Centrar el texto */
-    color: var(--textSecondary); /* Color gris usando el color de texto secundario */
-    font-size: 1.1rem; /* Tamaño de fuente */
-    margin-top: 2rem; /* Margen superior */
-    grid-column: 1 / -1; /* Ocupar todas las columnas en el grid */
+.no-events-message,
+.error-message {
+    text-align: center;
+    padding: 1.5rem;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    margin: 1rem 0;
 }
 
-/* Estilos para el mensaje de error (si existe) */
-.event-list-container .error-message {
-    color: var(--primary); /* Color rojo para errores usando el color primario */
-    text-align: center;
-    font-size: 1.2rem;
-    margin-top: 2rem;
+.no-events-message {
+    background-color: var(--light-background);
+    color: var(--textSecondary);
+    border: 1px dashed var(--border);
+}
+
+.error-message {
+    background-color: #fff2f2;
+    color: var(--primary);
+    border: 1px solid var(--primary);
 }
 
 /* Media queries para responsividad */
+@media (min-width: 480px) {
+    .event-list-container {
+        padding: 1rem;
+        margin: 1rem;
+    }
+
+    .header-actions {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
 @media (min-width: 768px) {
-     .list-header {
-        flex-wrap: nowrap; /* Evitar que el encabezado se envuelva */
-     }
-     .header-actions {
-        flex-wrap: nowrap; /* Evitar que los botones se envuelvan */
-     }
-     .filter-section {
-        flex-wrap: nowrap; /* Evitar que los filtros se envuelvan en pantallas más grandes */
-     }
-     .filter-input,
-     .filter-select {
-        min-width: unset; /* Resetear el ancho mínimo */
-        width: auto; /* Permitir que el ancho se ajuste automáticamente */
-     }
-     .events-items-list {
-        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); /* Ajustar ancho mínimo de columnas */
-     }
+    .event-list-container {
+        padding: 1.5rem;
+        margin: 1.5rem auto;
+        max-width: 1200px;
+    }
+
+    .list-header {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        padding-bottom: 1rem;
+    }
+
+    .list-header h2 {
+        font-size: 1.5rem;
+    }
+
+    .header-actions {
+        width: auto;
+        grid-template-columns: auto auto;
+    }
+
+    .btn-add-programacion,
+    .btn-go-to-dashboard {
+        padding: 0.75rem 1.25rem;
+        width: auto;
+    }
+
+    .filter-section {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+    }
+
+    .filter-input,
+    .filter-select {
+        flex: 1;
+        min-width: 150px;
+        max-width: 250px;
+    }
+
+    .event-items-list {
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1rem;
+    }
 }
 
 @media (min-width: 1024px) {
-    .events-items-list {
-        grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); /* Ajustar ancho mínimo de columnas para pantallas grandes */
+    .event-list-container {
+        padding: 2rem;
+    }
+
+    .list-header h2 {
+        font-size: 1.75rem;
+    }
+
+    .filter-section {
+        gap: 1rem;
+    }
+
+    .event-items-list {
+        gap: 1.25rem;
     }
 }
 

@@ -5,314 +5,364 @@
             --complement-color: #394a9e; /* Azul un poco más claro */
             --text-primary: #333;
             --text-secondary: #555;
-            --border-color: #ccc;
-            --background-color: #fff; /* Usaremos blanco para el fondo principal */
-            --card-background: #fefefe; /* Blanco roto para las tarjetas */
-            --light-grey-background: #f4f7f6; /* Fondo gris claro para la sección principal */
+            --border-color: #eee;
+            --background-color: #f4f7f6;
+            --card-background: #fff; /* Blanco roto para las tarjetas */
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+            
+            /* Sombras */
+            --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+            
+            /* Bordes */
+            --radius-sm: 4px;
+            --radius-md: 8px;
+            --radius-lg: 12px;
+            
+            /* Espaciados */
+            --spacing-xs: 0.5rem;
+            --spacing-sm: 0.75rem;
+            --spacing-md: 1rem;
+            --spacing-lg: 1.5rem;
+            --spacing-xl: 2rem;
         }
 
 
-        /* Estilos para el contenedor principal del dashboard */
+        /* Estilos base */
         .dashboard-container {
-            padding: 20px;
-            background-color: var(--light-grey-background); /* Usar el gris claro para el fondo */
-            min-height: calc(100vh - var(--sidebar-height, 0px) - var(--header-height, 0px));
-            font-family: 'Arial', sans-serif;
-            color: var(--text-primary); /* Color de texto principal */
+            padding: var(--spacing-sm);
+            background-color: var(--background-color);
+            min-height: 100vh;
+            width: 100%;
+            box-sizing: border-box;
         }
 
         /* Encabezado del Dashboard */
         .dashboard-header {
-            margin-bottom: 30px;
-            border-bottom: 2px solid var(--primary-color); /* Línea divisoria con color primario (rojo) */
-            padding-bottom: 10px;
+            margin-bottom: var(--spacing-lg);
+            padding: var(--spacing-md) var(--spacing-sm);
+            background-color: var(--card-background);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-sm);
         }
 
         .dashboard-header h1 {
             margin: 0;
-            color: var(--secondary-color); /* Color secundario (azul oscuro) para el título principal */
-            font-size: 2.5em;
-            font-weight: bold;
+            color: var(--secondary-color);
+            font-size: 1.5rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
         }
 
-        /* Tarjetas de resumen (Eventos Programados, Instructores, Próximo Evento) */
+        /* Tarjetas de resumen */
         .summary-cards {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* 3 columnas adaptables */
-            gap: 25px; /* Espacio entre las tarjetas */
-            margin-bottom: 35px; /* Espacio debajo de las tarjetas de resumen */
+            grid-template-columns: 1fr;
+            gap: var(--spacing-md);
+            margin-bottom: var(--spacing-lg);
         }
 
-        .summary-cards .card {
-            background-color: var(--card-background); /* Fondo de tarjeta */
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
-            text-align: center;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            border: 1px solid var(--border-color); /* Borde sutil con color de borde */
-        }
-
-        .summary-cards .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.12);
-        }
-
-        .summary-cards .card h2 {
-            font-size: 1.3em;
-            color: var(--text-secondary); /* Color de texto secundario para los subtítulos */
-            margin-bottom: 15px;
-        }
-
-        .summary-cards .card p {
-            font-size: 1.1em; /* Tamaño grande para los números/título principal */
-            font-weight: bold;
-            color: var(--complement-color); /* Color complementario (azul claro) para los valores importantes */
-            margin: 0;
-            line-height: 1.2;
-        }
-
-
-        /* Sección de Próximos Eventos */
-        .upcoming-events-section {
-            background-color: var(--card-background); /* Fondo de tarjeta */
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
-            margin-top: 25px; /* Espacio superior para separar de las tarjetas de resumen */
-            border: 1px solid var(--border-color); /* Borde sutil */
-        }
-
-        .upcoming-events-section .section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 25px;
-            border-bottom: 1px solid var(--border-color); /* Línea sutil debajo del encabezado */
-            padding-bottom: 15px;
-            flex-wrap: wrap; /* Permitir que los elementos se envuelvan */
-        }
-
-        .upcoming-events-section .section-header h2 {
-            margin: 0;
-            color: var(--secondary-color); /* Color secundario para el título de la sección */
-            font-size: 1.8em;
-            font-weight: bold;
-        }
-
-        /* Estilo para el botón "Nueva Programación" */
-        .new-event-button {
-            background-color: var(--primary-color); /* Color primario (rojo) para botón de acción principal */
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 1em;
-            font-weight: bold;
+        .card {
+            background-color: var(--card-background);
+            padding: var(--spacing-md);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-sm);
             display: flex;
             align-items: center;
-            gap: 8px;
-            transition: background-color 0.3s ease;
-        }
-
-        .new-event-button:hover {
-            background-color: #c00223; /* Un rojo un poco más oscuro para el hover */
-        }
-
-        /* Contenedor de la lista de Próximos Eventos */
-        .upcoming-events-list {
-            display: grid;
-            grid-template-columns: 1fr; /* Una columna por defecto */
-            gap: 20px; /* Espacio entre cada EventItem */
-            margin-top: 20px;
-        }
-
-        /* Estilos para el EventItem dentro del Dashboard */
-        /* Asumimos que EventItem.js tiene una estructura básica que podemos estilizar aquí */
-        .upcoming-events-list .event-item-card {
-            background-color: var(--background-color); /* Fondo blanco para cada item de evento */
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-            border: 1px solid var(--border-color); /* Borde sutil */
+            gap: var(--spacing-md);
             transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
 
-        .upcoming-events-list .event-item-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
         }
 
-        /* Estilos para los elementos dentro de EventItem (si es necesario ajustar) */
-        /* Esto es solo un ejemplo, ajusta según la estructura interna de EventItem.js */
-        .upcoming-events-list .event-item-card h3 {
-            color: var(--secondary-color); /* Color secundario para el título del evento */
-            margin-bottom: 8px;
-            font-size: 1.4em;
+        .card-icon {
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--background-color);
+            border-radius: var(--radius-sm);
         }
 
-        .upcoming-events-list .event-item-card .event-details {
+        .card-icon-svg {
+            width: 24px;
+            height: 24px;
+            color: var(--complement-color);
+        }
+
+        .card-content {
+            flex: 1;
+        }
+
+        .card h2 {
+            margin: 0;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .card p {
+            margin: var(--spacing-xs) 0 0;
+            color: var(--text-primary);
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        /* Información del próximo evento */
+        .next-event-info {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-xs);
+        }
+
+        .event-title {
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .event-details {
             display: flex;
             flex-wrap: wrap;
-            gap: 15px;
-            margin-top: 10px;
-            color: var(--text-secondary); /* Color de texto secundario para los detalles */
+            gap: var(--spacing-xs);
+            font-size: 0.875rem;
         }
 
-        .upcoming-events-list .event-item-card .detail-item {
+        .event-date,
+        .event-location {
+            color: var(--text-secondary);
+        }
+
+        .event-modality {
+            padding: 2px 8px;
+            border-radius: var(--radius-sm);
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .event-modality.presencial {
+            background-color: var(--success-color);
+            color: white;
+        }
+
+        .event-modality.virtual {
+            background-color: var(--complement-color);
+            color: white;
+        }
+
+        .event-modality.hibrida {
+            background-color: var(--warning-color);
+            color: var(--text-primary);
+        }
+
+        /* Sección de Próximos Eventos */
+        .upcoming-events-section {
+            background-color: var(--card-background);
+            padding: var(--spacing-md);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .section-header {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-sm);
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .section-header h2 {
+            margin: 0;
+            color: var(--text-primary);
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        /* Botones */
+        .new-event-button,
+        .create-event-button {
+            width: 100%;
+            padding: var(--spacing-sm) var(--spacing-md);
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
             display: flex;
             align-items: center;
-            gap: 5px;
-            /* color: var(--text-secondary); */ /* Ya definido en event-details */
-            font-size: 0.95em;
+            justify-content: center;
+            gap: var(--spacing-sm);
+            transition: all 0.2s ease;
         }
 
-        /* Estilos para los iconos dentro de detail-item si los usas */
-        .upcoming-events-list .event-item-card .detail-item svg {
-            color: var(--complement-color); /* Color complementario para los iconos */
+        .new-event-button:hover,
+        .create-event-button:hover {
+            background-color: #c00223;
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-sm);
         }
 
-
-        .upcoming-events-list .event-item-card .event-actions {
-            margin-top: 15px;
-            display: flex;
-            gap: 10px;
-            justify-content: flex-end; /* Alinear botones a la derecha */
+        .button-icon {
+            width: 16px;
+            height: 16px;
         }
 
-        /* Estilos para los botones de acción (Editar, Eliminar) dentro de EventItem */
-        /* Asumiendo que son botones o enlaces con clases */
-        .upcoming-events-list .event-item-card .event-actions .edit-button {
-            background-color: var(--complement-color); /* Color complementario para editar */
-            color: white;
-            padding: 5px 10px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.9em;
-            transition: background-color 0.3s ease;
+        /* Lista de Eventos */
+        .upcoming-events-list {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: var(--spacing-md);
         }
 
-        .upcoming-events-list .event-item-card .event-actions .edit-button:hover {
-            background-color: #30408a; /* Un azul complementario más oscuro */
-        }
-
-        .upcoming-events-list .event-item-card .event-actions .delete-button {
-            background-color: var(--primary-color); /* Color primario para eliminar */
-            color: white;
-            padding: 5px 10px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.9em;
-            transition: background-color 0.3s ease;
-        }
-
-        .upcoming-events-list .event-item-card .event-actions .delete-button:hover {
-            background-color: #c00223; /* Un rojo primario más oscuro */
-        }
-
-
-        /* Estilos para el botón "Ver todos los eventos" */
-        .view-all-link {
-            text-align: right;
-            margin-top: 30px;
-        }
-
-        .view-all-link .link-button {
-            background: none;
-            border: none;
-            color: var(--complement-color); /* Color complementario para el enlace */
-            font-size: 1em;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            transition: color 0.3s ease;
-        }
-
-        .view-all-link .link-button:hover {
-            color: var(--secondary-color); /* Color secundario al pasar el ratón */
-            text-decoration: underline;
-        }
-
-        /* Estilos para mensajes de estado */
-        .no-upcoming-events, .error-message {
+        /* Estados de carga y error */
+        .loading-state,
+        .error-message,
+        .no-upcoming-events {
             text-align: center;
-            color: var(--text-secondary); /* Color de texto secundario */
-            font-style: italic;
-            padding: 20px;
-            border: 1px dashed var(--border-color); /* Borde con color de borde */
-            border-radius: 5px;
-            margin-top: 15px;
+            padding: var(--spacing-lg);
+            border-radius: var(--radius-md);
+        }
+
+        .loading-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: var(--spacing-md);
+            color: var(--text-secondary);
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border-color);
+            border-top-color: var(--complement-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
         }
 
         .error-message {
-            color: var(--primary-color); /* Rojo para errores */
-            font-weight: bold;
+            background-color: #fff2f2;
+            border: 1px solid var(--danger-color);
+            color: var(--danger-color);
         }
 
+        .no-upcoming-events {
+            background-color: var(--background-color);
+            border: 2px dashed var(--border-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: var(--spacing-md);
+        }
 
-        /* Media Queries para responsividad */
-        @media (max-width: 992px) {
+        .no-upcoming-events p {
+            color: var(--text-secondary);
+            margin: 0;
+        }
+
+        /* Ver todos los eventos */
+        .view-all-link {
+            margin-top: var(--spacing-lg);
+            padding-top: var(--spacing-md);
+            border-top: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        .link-button {
+            padding: var(--spacing-sm) var(--spacing-md);
+            background: none;
+            border: 1px solid var(--complement-color);
+            color: var(--complement-color);
+            border-radius: var(--radius-sm);
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            transition: all 0.2s ease;
+        }
+
+        .link-button:hover {
+            background-color: var(--complement-color);
+            color: white;
+        }
+
+        /* Media Queries */
+        @media (min-width: 480px) {
+            .dashboard-container {
+                padding: var(--spacing-md);
+            }
+
             .summary-cards {
-                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-                gap: 20px;
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .section-header {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .new-event-button {
+                width: auto;
+                min-width: 200px;
             }
         }
 
-        @media (max-width: 768px) {
+        @media (min-width: 768px) {
             .dashboard-container {
-                padding: 15px;
+                padding: var(--spacing-lg);
             }
 
             .dashboard-header h1 {
-                font-size: 2em;
+                font-size: 1.75rem;
             }
 
             .summary-cards {
-                grid-template-columns: 1fr; /* Una columna en pantallas más pequeñas */
-                gap: 15px;
-            }
-
-            .summary-cards .card p {
-                font-size: 2.2em;
-            }
-
-            .upcoming-events-section .section-header {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-
-            .upcoming-events-section .section-header h2 {
-                margin-bottom: 15px;
+                grid-template-columns: repeat(3, 1fr);
             }
 
             .upcoming-events-list {
-                gap: 15px;
+                grid-template-columns: repeat(2, 1fr);
             }
 
-            .upcoming-events-list .event-item-card {
-                padding: 15px;
+            .card h2 {
+                font-size: 1rem;
             }
 
-            .upcoming-events-list .event-item-card .event-actions {
-                justify-content: center; /* Centrar botones de acción en móvil */
+            .card p {
+                font-size: 1.5rem;
             }
         }
 
-        @media (max-width: 480px) {
+        @media (min-width: 1024px) {
             .dashboard-container {
-                padding: 10px;
+                padding: var(--spacing-xl);
+                max-width: 1200px;
+                margin: 0 auto;
             }
 
-            .dashboard-header h1 {
-                font-size: 1.8em;
+            .upcoming-events-list {
+                grid-template-columns: repeat(3, 1fr);
             }
 
-            .summary-cards .card h2 {
-                font-size: 1.1em;
+            .new-event-button {
+                min-width: 240px;
             }
         }

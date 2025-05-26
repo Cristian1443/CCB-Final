@@ -19,9 +19,11 @@ function EventItem({ event, onEdit, onDelete }) {
         {/* Título del evento */}
         <h3>{event.title}</h3>
         {/* Detalles del evento */}
-        <p>Fecha: {event.date} | Hora: {event.time}</p>
+        <p>Fecha: {event.date} | Hora Inicio: {event.time} | Hora Fin: {event.endTime}</p>
+        <p>Programa: {event.program}</p>
         <p>Lugar: {event.location} | Modalidad: {event.modality}</p>
         <p>Instructor: {event.instructor}</p>
+        <p>Especialidad: {event.specialty}</p>
         {/* Puedes añadir más detalles aquí si son relevantes para mostrar en la lista */}
       </div>
 
