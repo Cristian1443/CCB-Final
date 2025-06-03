@@ -1,26 +1,37 @@
 .gestion-vacantes {
-  padding: 2rem;
-  max-width: 1200px;
+   max-width: 1200px;
   margin: 0 auto;
+  padding: 1rem;
+  font-family: 'Segoe UI', sans-serif;
 }
 
 .header-acciones {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  background-color: white;
   margin-bottom: 2rem;
+  text-align: center; /* centrado para móviles */
+  padding: 3%;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
-
+.titulo-seccion {
+  flex: 1 1 auto;
+}
 .titulo-seccion h2 {
-  color: var(--primary-color);
+  color: #273474;
   font-size: 2rem;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.25rem;
+  margin-top: 0;
 }
-
+  
 .titulo-seccion p {
-  color: var(--text-secondary);
+  color: #394a9e;
+  margin: 0;
 }
-
 .btn-crear-vacante {
   background: var(--primary-color);
   color: white;
@@ -28,11 +39,12 @@
   padding: 0.75rem 1.5rem;
   border-radius: 8px;
   cursor: pointer;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 0.5rem;
   font-weight: 500;
   transition: all 0.3s ease;
+  white-space: nowrap;
 }
 
 .btn-crear-vacante:hover {
@@ -274,14 +286,26 @@
 }
 
 .btn-ver-postulaciones {
-  background: var(--primary-color);
+  background: #273474;
   color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
 }
 
-.btn-editar:hover,
 .btn-ver-postulaciones:hover {
+  background: #394a9e;
   transform: translateY(-2px);
-  filter: brightness(1.1);
+}
+
+.btn-ver-postulaciones i {
+  font-size: 1rem;
 }
 
 @media (max-width: 768px) {
@@ -322,5 +346,15 @@
   .btn-ver-postulaciones {
     flex: 1;
     justify-content: center;
+  }
+
+  .header-acciones {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .titulo-seccion {
+    flex: unset;
   }
 }

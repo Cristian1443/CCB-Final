@@ -1,228 +1,244 @@
 .postulaciones-container {
-  padding: 2rem;
   max-width: 1200px;
   margin: 0 auto;
+  padding: 1rem;
+  font-family: 'Segoe UI', sans-serif;
 }
-
+  
 .header-section {
+  text-align: center;
   margin-bottom: 2rem;
 }
 
-.titulo-seccion h2 {
-  color: var(--primary-color);
-  font-size: 2rem;
-  margin-bottom: 0.5rem;
-}
-
-.titulo-seccion p {
-  color: var(--text-secondary);
-}
-
+  
+  .titulo-seccion h2 {
+    color: #273474;
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .titulo-seccion p {
+    color: #394a9e;
+  }
+  
 .filtros-section {
   display: flex;
   gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
   margin-bottom: 2rem;
 }
 
+  
 .filtro-select {
-  padding: 0.5rem 1rem;
-  border: 1px solid var(--border-color);
+  padding: 0.5rem;
   border-radius: 8px;
-  min-width: 200px;
+  border: 1px solid #ccc;
+  font-size: 1rem;
 }
 
 .postulaciones-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-  gap: 2rem;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 1.5rem;
 }
 
+  
 .postulacion-card {
-  background: white;
+  background: #ffffff;
   border-radius: 12px;
-  padding: 1.5rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  padding: 1.2rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  transition: transform 0.2s ease;
 }
-
+  
 .postulacion-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-4px);
 }
 
+  
 .postulacion-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 1rem;
+  align-items: center;
 }
-
-.postulacion-header h3 {
-  color: var(--primary-color);
-  font-size: 1.25rem;
-  margin: 0;
-}
-
+  
+  .postulacion-header h3 {
+    color: #273474;
+    font-size: 1.25rem;
+    margin: 0;
+  }
+  
 .estado {
-  padding: 0.25rem 0.75rem;
-  border-radius: 20px;
-  font-size: 0.875rem;
-  font-weight: 500;
+  font-weight: bold;
+  padding: 0.3rem 0.6rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  color: #fff;
 }
-
-.estado.en-revision {
-  background: var(--warning-color);
-  color: var(--text-primary);
-}
-
-.estado.entrevista-programada {
-  background: var(--primary-color);
-  color: white;
+  
+.estado.en-revisión {
+  background-color: #ffc107;
 }
 
 .estado.seleccionado {
-  background: var(--success-color);
-  color: white;
+  background-color: #28a745;
 }
 
 .estado.rechazado {
-  background: var(--danger-color);
-  color: white;
+  background-color: #dc3545;
 }
 
-.postulacion-info {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 1rem;
-  margin: 1rem 0;
+.estado.entrevista-programada {
+  background-color: #17a2b8;
 }
-
-.info-item {
+  
+  .postulacion-info {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+    margin: 1rem 0;
+  }
+  .postulacion-info .info-item {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  color: var(--text-secondary);
-  font-size: 0.9rem;
+  margin-bottom: 0.4rem;
+  font-size: 0.95rem;
+  color: #444;
 }
 
-.info-item i {
-  color: var(--primary-color);
+  
+  .info-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #394a9e;
+    font-size: 0.9rem;
+  }
+  
+  .info-item i {
+    color: #273474;
+  }
+  
+  .etapa-actual {
+    margin: 1.5rem 0;
+  }
+  
+.etapa-actual h4,
+.postulacion-notas h4 {
+  margin-bottom: 0.5rem;
 }
-
-.etapa-actual {
-  margin: 1.5rem 0;
-}
-
-.etapa-actual h4 {
-  color: var(--text-primary);
-  margin-bottom: 1rem;
-}
-
+  
 .etapas-progreso {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.5rem;
-  overflow-x: auto;
-  padding-bottom: 0.5rem;
+  font-size: 0.85rem;
 }
-
+  
+  .etapas-progreso::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+  }
+  
 .etapa {
-  padding: 0.5rem 1rem;
-  border-radius: 20px;
-  font-size: 0.875rem;
-  background: var(--background-color);
-  color: var(--text-secondary);
-  white-space: nowrap;
-  position: relative;
+  padding: 0.3rem 0.6rem;
+  border-radius: 6px;
+  background-color: #e9ecef;
 }
 
 .etapa.completada {
-  background: var(--primary-color);
+  background-color: #007bff;
   color: white;
 }
-
-.etapa:not(:last-child)::after {
-  content: '';
-  position: absolute;
-  right: -0.25rem;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 0.5rem;
-  height: 0.5rem;
-  background: var(--border-color);
-  border-radius: 50%;
-}
-
+  
+  .etapa:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    right: -0.25rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 0.5rem;
+    height: 0.5rem;
+    background: #e4022c;
+    border-radius: 50%;
+  }
+  
 .postulacion-acciones {
   display: flex;
-  gap: 1rem;
-  margin: 1.5rem 0;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
+  
 .select-estado,
 .select-etapa {
-  padding: 0.5rem 1rem;
-  border: 1px solid var(--border-color);
+  padding: 0.4rem;
   border-radius: 6px;
-  min-width: 150px;
+  font-size: 0.9rem;
+  border: 1px solid #ccc;
 }
-
+  
 .btn-ver-perfil {
-  background: var(--primary-color);
-  color: white;
+  padding: 0.5rem;
   border: none;
-  padding: 0.5rem 1rem;
+  background-color: #343a40;
+  color: white;
   border-radius: 6px;
+  font-size: 0.9rem;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.875rem;
-  transition: all 0.2s ease;
 }
 
-.btn-ver-perfil:hover {
-  background: var(--secondary-color);
-  transform: translateY(-2px);
+.btn-ver-perfil i {
+  margin-right: 0.4rem;
 }
-
-.postulacion-notas {
-  margin-top: 1.5rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--border-color);
-}
-
-.postulacion-notas h4 {
-  color: var(--text-primary);
-  margin-bottom: 0.5rem;
-}
-
-.postulacion-notas p {
-  color: var(--text-secondary);
-  font-size: 0.95rem;
-  line-height: 1.6;
-}
-
-/* Modal de detalle del candidato */
+  
+  .btn-ver-perfil:hover {
+    background: #394a9e;
+    transform: translateY(-2px);
+  }
+  
+  .postulacion-notas {
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+  }
+  
+  .postulacion-notas h4 {
+    color: #273474;
+    margin-bottom: 0.5rem;
+  }
+  
+  .postulacion-notas p {
+    color: #394a9e;
+    font-size: 0.95rem;
+    line-height: 1.6;
+  }
+  
+  /* Modal de detalle del candidato */
 .modal-detalle {
   position: fixed;
   top: 0;
   left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.5);
   display: flex;
-  align-items: center;
   justify-content: center;
-  z-index: 1000;
+  align-items: center;
+  z-index: 999;
 }
-
+  
 .modal-content {
   background: white;
-  border-radius: 12px;
   padding: 2rem;
+  border-radius: 12px;
   width: 90%;
-  max-width: 600px;
-  max-height: 90vh;
+  max-width: 800px;
+  max-height: 90%;
   overflow-y: auto;
   position: relative;
 }
@@ -231,96 +247,187 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.5rem;
 }
-
-.modal-header h3 {
-  color: var(--primary-color);
-  margin: 0;
-}
-
+  
 .btn-cerrar {
   background: none;
   border: none;
-  color: var(--text-secondary);
+  font-size: 1.5rem;
   cursor: pointer;
-  font-size: 1.25rem;
-  padding: 0.5rem;
-  transition: color 0.2s ease;
 }
-
-.btn-cerrar:hover {
-  color: var(--danger-color);
-}
-
-.candidato-info {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
-.info-seccion {
-  padding: 1rem;
-  background: var(--background-color);
-  border-radius: 8px;
-}
-
-.info-seccion h4 {
-  color: var(--primary-color);
-  margin-bottom: 1rem;
-}
-
-.info-seccion p {
-  margin: 0.5rem 0;
-  color: var(--text-secondary);
-}
-
-.info-seccion strong {
-  color: var(--text-primary);
-}
-
-.info-seccion a {
-  color: var(--primary-color);
-  text-decoration: none;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  transition: color 0.2s ease;
-}
-
-.info-seccion a:hover {
-  color: var(--secondary-color);
-}
-
-@media (max-width: 768px) {
-  .postulaciones-container {
-    padding: 1rem;
+  .btn-cerrar:hover {
+    color: #273474;
   }
-
-  .filtros-section {
-    flex-direction: column;
+  
+.candidato-info .info-seccion {
+  margin-top: 1rem;
+}
+  
+  .info-seccion {
+    padding: 1.5rem;
+    background: #f5f7fa;
+    border-radius: 8px;
+    border-left: 4px solid #273474;
   }
-
-  .filtro-select {
-    width: 100%;
+  
+  .info-seccion h4 {
+    color: #273474;
+    margin-bottom: 1rem;
+    font-size: 1.2rem;
   }
-
-  .postulacion-info {
+  
+  .info-seccion p {
+    margin: 0.5rem 0;
+    color: #394a9e;
+  }
+  
+  .info-seccion strong {
+    color: #273474;
+  }
+  
+  .educacion-item,
+  .experiencia-item,
+  .certificacion-item {
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(57, 74, 158, 0.2);
+  }
+  
+  .educacion-item:last-child,
+  .experiencia-item:last-child,
+  .certificacion-item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+    margin-bottom: 0;
+  }
+  
+  .educacion-item h5,
+  .experiencia-item h5,
+  .certificacion-item h5 {
+    color: #273474;
+    margin: 0 0 0.5rem 0;
+    font-size: 1.1rem;
+  }
+  
+  .empresa-periodo {
+    color: #e4022c;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+  }
+  
+  .descripcion {
+    color: #394a9e;
+    line-height: 1.6;
+  }
+  
+  .habilidades-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  
+  .habilidad-tag {
+    background: #273474;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+  }
+  
+  .idioma-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+  }
+  
+  .idioma-nombre {
+    color: #273474;
+    font-weight: 500;
+  }
+  
+  .idioma-nivel {
+    color: #394a9e;
+    background: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 15px;
+    font-size: 0.875rem;
+  }
+  
+  .linkedin-link {
+    color: #273474;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: color 0.2s ease;
+    font-weight: 500;
+  }
+  
+  .linkedin-link:hover {
+    color: #e4022c;
+  }
+  
+  @media (max-width: 1200px) {
+    .postulaciones-grid {
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
+  }
+  
+  @media (max-width: 992px) {
+    .postulaciones-grid {
+      grid-template-columns: 1fr;
+    }
+    
+    .postulacion-acciones {
+      grid-template-columns: 1fr;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .postulaciones-container {
+      padding: 1rem;
+    }
+  
+    .filtros-section {
+      flex-direction: column;
+    }
+  
+    .filtro-select {
+      width: 100%;
+    }
+  
+    .postulacion-info {
+      grid-template-columns: 1fr;
+    }
+  
+    .postulacion-acciones {
+      grid-template-columns: 1fr;
+    }
+  
+    .modal-content {
+      padding: 1rem;
+      width: 95%;
+    }
+  
+    .etapas-progreso {
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      padding-bottom: 1rem;
+    }
+  
+    .info-seccion {
+      padding: 1rem;
+    }
+  
+    .postulaciones-grid {
+      gap: 1rem;
+    }
+  }
+  @media (max-width: 600px) {
+  .postulaciones-grid {
     grid-template-columns: 1fr;
-  }
-
-  .postulacion-acciones {
-    flex-direction: column;
-  }
-
-  .select-estado,
-  .select-etapa,
-  .btn-ver-perfil {
-    width: 100%;
-  }
-
-  .modal-content {
-    padding: 1rem;
-    width: 95%;
   }
 }

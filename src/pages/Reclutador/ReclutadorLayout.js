@@ -19,37 +19,34 @@ function ReclutadorLayout() {
   return (
     <div className="reclutador-layout">
       <nav className="reclutador-nav">
-        <div className="nav-brand">
-          <img src="/logo-ccb.png" alt="Logo CCB" className="nav-logo" />
-          <span>Portal de Reclutamiento</span>
-        </div>
+  <div className="nav-brand">
+    <span>Portal de Reclutamiento</span>
+  </div>
 
-        <div className="nav-links">
-          <NavLink 
-            to="/reclutador/vacantes" 
-            className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}
-          >
-            <i className="fas fa-briefcase"></i>
-            Gestión de Vacantes
-          </NavLink>
+  <div className="nav-links">
+    <NavLink 
+      to="/reclutador/vacantes" 
+      className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}
+    >
+      <i className="fas fa-briefcase"></i>
+      Gestión de Vacantes
+    </NavLink>
 
-          <NavLink 
-            to="/reclutador/postulaciones" 
-            className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}
-          >
-            <i className="fas fa-users"></i>
-            Postulaciones
-          </NavLink>
-        </div>
-
-        <div className="nav-footer">
-          <button onClick={handleLogout} className="btn-logout">
-            <i className="fas fa-sign-out-alt"></i>
-            Cerrar Sesión
-          </button>
-        </div>
-      </nav>
-
+    <NavLink 
+      to="/reclutador/postulaciones" 
+      className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}
+    >
+      <i className="fas fa-users"></i>
+      Postulaciones
+    </NavLink>
+    <div className="nav-footer">
+    <button onClick={handleLogout} className="btn-logout">
+      <i className="fas fa-sign-out-alt"></i>
+      Cerrar Sesión
+    </button>
+  </div>
+  </div>
+</nav>
       <main className="reclutador-main">
         <Outlet />
       </main>

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './GestionVacantes.css';
 
 const vacantesIniciales = [
@@ -26,6 +27,7 @@ const vacantesIniciales = [
 ];
 
 function GestionVacantes() {
+  const navigate = useNavigate();
   const [vacantes, setVacantes] = useState(vacantesIniciales);
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
   const [filtroEstado, setFiltroEstado] = useState('');
@@ -94,6 +96,13 @@ function GestionVacantes() {
       const cumpleArea = !filtroArea || vacante.area === filtroArea;
       return cumpleEstado && cumpleArea;
     });
+  };
+
+  const verPostulaciones = (e, vacanteId) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('Navegando a postulaciones de vacante:', vacanteId);
+    navigate(`/reclutador/vacantes/${vacanteId}/postulaciones`);
   };
 
   return (
@@ -307,7 +316,11 @@ function GestionVacantes() {
                   <i className="fas fa-edit"></i>
                   Editar
                 </button>
-                <button className="btn-ver-postulaciones">
+                <button 
+                  type="button"
+                  className="btn-ver-postulaciones"
+                  onClick={(e) => verPostulaciones(e, vacante.id)}
+                >
                   <i className="fas fa-user-check"></i>
                   Ver Postulaciones
                 </button>

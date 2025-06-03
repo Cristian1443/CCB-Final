@@ -34,6 +34,7 @@ import ConsultorProfilePage from "./pages/Consultor/ConsultorProfilePage";
 import ReclutadorLayout from './pages/Reclutador/ReclutadorLayout';
 import GestionVacantes from './pages/Reclutador/GestionVacantes';
 import Postulaciones from './pages/Reclutador/Postulaciones';
+import PostulacionesVacante from './pages/Reclutador/PostulacionesVacante';
 
 // Componente de protección de rutas
 const ProtectedRoute = ({ children, allowedRoles }) => {
@@ -103,6 +104,7 @@ const App = () => {
             <Route index element={<GestionVacantes />} />
             <Route path="vacantes" element={<GestionVacantes />} />
             <Route path="postulaciones" element={<Postulaciones />} />
+            <Route path="vacantes/:vacanteId/postulaciones" element={<PostulacionesVacante />} />
           </Route>
 
           {/* Gestora - Gestión de eventos */}
