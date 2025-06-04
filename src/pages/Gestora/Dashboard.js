@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import DashboardLayout from '../../components/DashboardLayout';
 import './Dashboard.css';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement, PointElement, LineElement } from 'chart.js';
-import { Bar, Doughnut, Line } from 'react-chartjs-2';
+import { Bar, Doughnut } from 'react-chartjs-2'; // Line chart was not used in the original, keeping it simple
 
 // Registrar los componentes necesarios de ChartJS
 ChartJS.register(
@@ -17,6 +17,22 @@ ChartJS.register(
   PointElement,
   LineElement
 );
+
+// Helper function to format currency
+const formatCurrency = (value) => {
+  if (typeof value === 'string') {
+    // Remove non-numeric characters except for comma and period for parsing
+    const numericString = value.replace(/[$.-]/g, '').replace(',', '.');
+    const number = parseFloat(numericString);
+    if (isNaN(number)) return value; // Return original if parsing fails
+    return `$${parseInt(number).toLocaleString('es-CO')}`; // Format as integer COP
+  }
+  if (typeof value === 'number') {
+    return `$${value.toLocaleString('es-CO')}`;
+  }
+  return value; // Return as is if not string or number
+};
+
 
 function Dashboard() {
   const [selectedSection, setSelectedSection] = useState('general');
@@ -32,25 +48,25 @@ function Dashboard() {
     { id: 'alimentos', name: 'Sector Alimentos', icon: '🍽️' }
   ];
 
-  // Datos específicos para cada sección
+  // Datos actualizados basados en el PDF
   const sectionData = {
     general: {
       stats: [
-        { title: 'Total Horas', value: '13,895' },
-        { title: 'Valor Total', value: '$2,861,523,576' },
-        { title: 'Horas Ejecutadas', value: '113' }
+        { title: 'Total Horas Programa', value: '13,895' }, // [cite: 2]
+        { title: 'Valor Total Programa', value: formatCurrency('2691023510') }, // [cite: 2]
+        { title: 'Horas Ejecutadas (Abril 2025)', value: '113' } // [cite: 2]
       ],
       barData: {
-        labels: ['Crecimiento', 'Innovación', 'Emprendimiento', 'Financiero', 'Alimentos'],
+        labels: ['Crecimiento E.', 'Innovación', 'Emprendimiento', 'Financiero & Prod.', 'Alimentos'],
         datasets: [{
-          label: 'Horas por Sector',
-          data: [1310, 465, 1600, 818, 1508],
+          label: 'Horas por Sector/Programa Principal',
+          data: [1310, 480, 1000, 364, 1908], // [cite: 2]
           backgroundColor: [
-            'rgba(227, 25, 55, 0.8)',
-            'rgba(54, 162, 235, 0.8)',
-            'rgba(255, 206, 86, 0.8)',
-            'rgba(75, 192, 192, 0.8)',
-            'rgba(153, 102, 255, 0.8)',
+            'rgba(227, 25, 55, 0.8)',  // Crecimiento
+            'rgba(54, 162, 235, 0.8)', // Innovación
+            'rgba(255, 206, 86, 0.8)', // Emprendimiento
+            'rgba(75, 192, 192, 0.8)', // Financiero
+            'rgba(153, 102, 255, 0.8)',// Alimentos
           ],
           borderColor: [
             'rgba(227, 25, 55, 1)',
@@ -61,112 +77,111 @@ function Dashboard() {
           ],
           borderWidth: 1,
         }]
+      },
+      doughnutData: { // Added for 'general' section
+        labels: ['Horas Ejecutadas (Abril 2025)', 'Horas Pendientes'],
+        datasets: [{
+          data: [113, 13895 - 113], // 113 ejecutadas, 13782 pendientes [cite: 2]
+          backgroundColor: [
+            'rgba(227, 25, 55, 0.8)', // Rojo para ejecutadas
+            'rgba(228, 228, 228, 0.8)', // Gris para pendientes
+          ],
+          borderColor: [
+            'rgba(227, 25, 55, 1)',
+            'rgba(200, 200, 200, 1)',
+          ],
+          borderWidth: 1,
+        }]
       }
     },
     crecimiento: {
       stats: [
-        { title: 'Empresas Atendidas', value: '245' },
-        { title: 'Horas Dedicadas', value: '1,310' },
-        { title: 'Proyectos Activos', value: '28' }
+        { title: 'Total Horas Asignadas', value: '1,310' }, // [cite: 2]
+        { title: 'Valor Total Estimado', value: formatCurrency('230080540') }, // [cite: 2]
+        { title: 'Nº Consultores', value: '10' } // [cite: 2]
       ],
       barData: {
-        labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun'],
+        labels: ['Ejecutadas (Abril 2025)', 'Pendientes (del total)'],
         datasets: [{
-          label: 'Empresas por Mes',
-          data: [35, 42, 48, 40, 45, 35],
-          backgroundColor: 'rgba(227, 25, 55, 0.8)',
+          label: 'Progreso Horas Crecimiento Empresarial',
+          data: [10, 1310 - 10], // 10 ejecutadas en Abril [cite: 2]
+          backgroundColor: ['rgba(227, 25, 55, 0.8)', 'rgba(227, 25, 55, 0.3)'],
           borderColor: 'rgba(227, 25, 55, 1)',
           borderWidth: 1,
         }]
       }
     },
-    innovacion: {
+    innovacion: { // RUTA: INNOVACION
       stats: [
-        { title: 'Proyectos Innovadores', value: '156' },
-        { title: 'Horas Innovación', value: '465' },
-        { title: 'Patentes Registradas', value: '12' }
+        { title: 'Total Horas Asignadas', value: '480' }, // [cite: 2]
+        { title: 'Valor Total Estimado', value: formatCurrency('102880200') }, // [cite: 2]
+        { title: 'Nº Consultores (Grupo Empr.)', value: '10' } // [cite: 2]
       ],
       barData: {
-        labels: ['Tecnología', 'Procesos', 'Productos', 'Servicios'],
+        labels: ['Total Horas Asignadas Innovación'],
         datasets: [{
-          label: 'Tipos de Innovación',
-          data: [45, 32, 28, 51],
+          label: 'Horas Innovación',
+          data: [480], // [cite: 2]
           backgroundColor: 'rgba(54, 162, 235, 0.8)',
           borderColor: 'rgba(54, 162, 235, 1)',
           borderWidth: 1,
         }]
       }
     },
-    emprendimiento: {
+    emprendimiento: { // RUTA: EMPRENDIMIENTO
       stats: [
-        { title: 'Startups Apoyadas', value: '89' },
-        { title: 'Horas Mentoría', value: '1,600' },
-        { title: 'Fondos Levantados', value: '$850M' }
+        { title: 'Total Horas Asignadas', value: '1,000' }, // [cite: 2]
+        { title: 'Valor Total Estimado', value: formatCurrency('281014400') }, // [cite: 2]
+        { title: 'Nº Consultores (Grupo Empr.)', value: '10' } // [cite: 2]
       ],
       barData: {
-        labels: ['Seed', 'Early', 'Growth', 'Scale'],
+        labels: ['Total Horas Asignadas Emprendimiento'],
         datasets: [{
-          label: 'Etapas de Emprendimiento',
-          data: [34, 28, 15, 12],
+          label: 'Horas Emprendimiento',
+          data: [1000], // [cite: 2]
           backgroundColor: 'rgba(255, 206, 86, 0.8)',
           borderColor: 'rgba(255, 206, 86, 1)',
           borderWidth: 1,
         }]
       }
     },
-    financiero: {
+    financiero: { // RUTA: FINANCIERO Y PRODUCTIVIDAD
       stats: [
-        { title: 'Empresas Financiadas', value: '67' },
-        { title: 'Horas Consultoría', value: '818' },
-        { title: 'Monto Total', value: '$1,200M' }
+        { title: 'Total Horas Asignadas', value: '364' }, // [cite: 2]
+        { title: 'Valor Total Estimado', value: formatCurrency('63930770') }, // [cite: 2]
+        { title: 'Nº Consultores', value: '2' } // [cite: 2]
       ],
       barData: {
-        labels: ['Crédito', 'Capital', 'Grants', 'Otros'],
+        labels: ["Productividad", "Gestión Financiera", "Tributario/Financiero"],
         datasets: [{
-          label: 'Tipos de Financiamiento',
-          data: [450, 320, 180, 250],
+          label: 'Distribución Horas (aprox.)',
+          data: [121, 121, 122], // Aproximación de 364h
           backgroundColor: 'rgba(75, 192, 192, 0.8)',
           borderColor: 'rgba(75, 192, 192, 1)',
           borderWidth: 1,
         }]
       }
     },
-    alimentos: {
+    alimentos: { // PROGRAMA: SECTOR ALIMENTOS
       stats: [
-        { title: 'Empresas Sector', value: '134' },
-        { title: 'Horas Sector', value: '1,508' },
-        { title: 'Certificaciones', value: '45' }
+        { title: 'Total Horas Programa', value: '1,908' }, // [cite: 2]
+        { title: 'Valor Total Estimado', value: formatCurrency('335109672') }, // [cite: 2]
+        { title: 'Nº Consultores (Subáreas)', value: '5+' } // 3 (IA) + 2 (Talento Humano) [cite: 2]
       ],
       barData: {
-        labels: ['Producción', 'Distribución', 'Retail', 'Exportación'],
+        labels: ["Aplicación IA (Alim.)", "Talento Humano (Alim.)"],
         datasets: [{
-          label: 'Cadena de Valor',
-          data: [42, 38, 28, 26],
-          backgroundColor: 'rgba(153, 102, 255, 0.8)',
-          borderColor: 'rgba(153, 102, 255, 1)',
+          label: 'Horas por Sub-Programa (Sector Alimentos)',
+          data: [336, 336], // [cite: 2]
+          backgroundColor: ['rgba(153, 102, 255, 0.8)', 'rgba(255, 159, 64, 0.8)'],
+          borderColor: ['rgba(153, 102, 255, 1)', 'rgba(255, 159, 64, 1)'],
           borderWidth: 1,
         }]
       }
     }
   };
 
-  const doughnutData = {
-    labels: ['Horas Ejecutadas', 'Horas Pendientes'],
-    datasets: [{
-      data: [113, 13782],
-      backgroundColor: [
-        'rgba(227, 25, 55, 0.8)',
-        'rgba(228, 228, 228, 0.8)',
-      ],
-      borderColor: [
-        'rgba(227, 25, 55, 1)',
-        'rgba(228, 228, 228, 1)',
-      ],
-      borderWidth: 1,
-    }]
-  };
 
-  // Actualizar el estado de isMobile cuando cambia el tamaño de la ventana
   useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.innerWidth <= 768);
@@ -177,19 +192,21 @@ function Dashboard() {
   }, []);
 
   useEffect(() => {
+    setLoading(true); // Iniciar carga al cambiar de sección
     const timer = setTimeout(() => {
       setLoading(false);
-    }, 1000);
+    }, 500); // Simular un pequeño retraso para la carga de datos
     return () => clearTimeout(timer);
   }, [selectedSection]);
 
   const handleSectionChange = (sectionId) => {
-    setLoading(true);
     setSelectedSection(sectionId);
   };
 
   const renderSectionContent = () => {
     const currentSection = sectionData[selectedSection];
+    if (!currentSection) return <p>Selecciona una sección.</p>;
+
 
     return (
       <div className="section-content">
@@ -203,22 +220,24 @@ function Dashboard() {
         </div>
 
         <div className="charts-grid">
-          <div className="chart-container">
-            <h3>Análisis Principal</h3>
-            <div className="chart-wrapper">
-              <Bar 
-                data={currentSection.barData} 
-                options={chartOptions}
-              />
-            </div>
-          </div>
-          
-          {selectedSection === 'general' && (
+          {currentSection.barData && (
             <div className="chart-container">
-              <h3>Progreso de Horas</h3>
+              <h3>{currentSection.barData.datasets[0].label || 'Análisis Principal'}</h3>
               <div className="chart-wrapper">
-                <Doughnut 
-                  data={doughnutData}
+                <Bar
+                  data={currentSection.barData}
+                  options={chartOptions}
+                />
+              </div>
+            </div>
+          )}
+          
+          {selectedSection === 'general' && currentSection.doughnutData && (
+            <div className="chart-container">
+              <h3>Progreso General de Horas</h3>
+              <div className="chart-wrapper">
+                <Doughnut
+                  data={currentSection.doughnutData}
                   options={doughnutOptions}
                 />
               </div>
@@ -230,10 +249,10 @@ function Dashboard() {
           <div className="footer-stats">
             <div className="stat-item">
               <span>Última Actualización</span>
-              <strong>{new Date().toLocaleDateString()}</strong>
+              <strong>{new Date().toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' })}</strong>
             </div>
             <div className="stat-item">
-              <span>Estado</span>
+              <span>Estado del Programa</span>
               <strong className="status-active">Activo</strong>
             </div>
           </div>
@@ -242,25 +261,24 @@ function Dashboard() {
     );
   };
 
-  // Ajustar las opciones de los gráficos según el dispositivo
   const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
       legend: {
-        position: isMobile ? 'bottom' : 'bottom',
+        position: isMobile ? 'bottom' : 'top',
         labels: {
-          boxWidth: isMobile ? 8 : 12,
-          padding: isMobile ? 10 : 15,
+          boxWidth: isMobile ? 10 : 12,
+          padding: isMobile ? 8 : 10,
           font: {
-            size: isMobile ? 10 : 11
+            size: isMobile ? 10 : 12
           }
         }
       },
       tooltip: {
-        backgroundColor: 'rgba(255, 255, 255, 0.9)',
-        titleColor: '#2C3E50',
-        bodyColor: '#2C3E50',
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        titleColor: '#fff',
+        bodyColor: '#fff',
         borderColor: 'rgba(0,0,0,0.1)',
         borderWidth: 1,
         padding: isMobile ? 8 : 10,
@@ -268,8 +286,24 @@ function Dashboard() {
           size: isMobile ? 11 : 12
         },
         titleFont: {
-          size: isMobile ? 11 : 12,
+          size: isMobile ? 12 : 13,
           weight: 'bold'
+        },
+        callbacks: {
+            label: function(context) {
+                let label = context.dataset.label || '';
+                if (label) {
+                    label += ': ';
+                }
+                if (context.parsed.y !== null) {
+                    // Formatear como número con separadores de miles
+                    label += context.parsed.y.toLocaleString('es-CO');
+                    if (context.dataset.label && context.dataset.label.toLowerCase().includes('horas')) {
+                        label += ' horas';
+                    }
+                }
+                return label;
+            }
         }
       }
     },
@@ -282,9 +316,12 @@ function Dashboard() {
         },
         ticks: {
           font: {
-            size: isMobile ? 10 : 11
+            size: isMobile ? 9 : 11
           },
-          maxTicksLimit: isMobile ? 4 : 5
+          maxTicksLimit: isMobile ? 5 : 6,
+           callback: function(value) {
+            return value.toLocaleString('es-CO'); // Formato con separador de miles
+          }
         }
       },
       x: {
@@ -293,12 +330,16 @@ function Dashboard() {
         },
         ticks: {
           font: {
-            size: isMobile ? 10 : 11
+            size: isMobile ? 9 : 11
           },
-          maxRotation: isMobile ? 45 : 0,
+          maxRotation: isMobile ? 60 : 0,
           minRotation: isMobile ? 45 : 0
         }
       }
+    },
+    animation: {
+        duration: 800,
+        easing: 'easeInOutQuart'
     }
   };
 
@@ -309,30 +350,49 @@ function Dashboard() {
       legend: {
         position: 'bottom',
         labels: {
-          boxWidth: isMobile ? 8 : 12,
-          padding: isMobile ? 10 : 15,
+          boxWidth: isMobile ? 10 : 12,
+          padding: isMobile ? 8 : 10,
           font: {
-            size: isMobile ? 10 : 11
+            size: isMobile ? 10 : 12
           }
         }
       },
       tooltip: {
-        backgroundColor: 'rgba(255, 255, 255, 0.9)',
-        titleColor: '#2C3E50',
-        bodyColor: '#2C3E50',
+        backgroundColor: 'rgba(0,0,0,0.8)',
+        titleColor: '#fff',
+        bodyColor: '#fff',
         borderColor: 'rgba(0,0,0,0.1)',
         borderWidth: 1,
-        padding: isMobile ? 8 : 10
+        padding: isMobile ? 8 : 10,
+        callbacks: {
+            label: function(context) {
+                let label = context.label || '';
+                if (label) {
+                    label += ': ';
+                }
+                if (context.parsed !== null) {
+                     // Formatear como número con separadores de miles
+                    label += context.parsed.toLocaleString('es-CO');
+                    label += ' horas';
+                }
+                return label;
+            }
+        }
       }
     },
-    cutout: isMobile ? '65%' : '70%'
+    cutout: isMobile ? '60%' : '70%',
+    animation: {
+        animateRotate: true,
+        animateScale: true,
+        duration: 1000
+    }
   };
 
   return (
     <DashboardLayout>
       <div className="dashboard-container">
         <div className="dashboard-header">
-          <h1>Panel de Control CCB</h1>
+          <h1>Panel de Control CCB - Propuesta Ejecución</h1>
         </div>
 
         <div className="dashboard-navigation">
@@ -343,7 +403,7 @@ function Dashboard() {
               onClick={() => handleSectionChange(section.id)}
             >
               <span className="nav-icon">{section.icon}</span>
-              {isMobile ? section.icon : section.name}
+              {isMobile && sections.length > 4 ? '' : section.name}
             </button>
           ))}
         </div>
@@ -351,7 +411,7 @@ function Dashboard() {
         {loading ? (
           <div className="dashboard-loading">
             <div className="loading-spinner"></div>
-            <p>Cargando datos...</p>
+            <p>Cargando datos de la sección...</p>
           </div>
         ) : (
           renderSectionContent()

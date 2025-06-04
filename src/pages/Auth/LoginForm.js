@@ -15,7 +15,7 @@ import { colors } from '../../colors';
 // Define el componente funcional LoginForm
 function LoginForm() {
   // Estados para manejar los valores de los campos del formulario
-  const [username, setUsername] = useState('');
+  const [username, setUsername] = useState(''); // En realidad será email
   const [password, setPassword] = useState('');
   // Estado para el checkbox "Recordar sesión"
   const [rememberMe, setRememberMe] = useState(false);
@@ -29,19 +29,28 @@ function LoginForm() {
   // Obtiene la función navigate para poder redirigir al usuario
   const navigate = useNavigate();
 
-
   // Función que se ejecuta cuando el usuario selecciona un rol en el componente RoleSelectorTabs
   const handleRoleSelect = (role) => {
     console.log('Rol seleccionado en pestañas:', role);
     // Actualiza el estado selectedRole con el rol que viene del componente de pestañas
     setSelectedRole(role);
-    // Opcional: Puedes limpiar los campos de usuario y contraseña al cambiar de rol si lo deseas
-    // setUsername('');
-    // setPassword('');
     // Limpia cualquier mensaje de error anterior al cambiar de rol
     setError(null);
   };
 
+  // Función para usar datos de prueba
+  const fillTestData = () => {
+    if (selectedRole === 'gestora') {
+      setUsername('admin@demo.com');
+      setPassword('12345');
+    } else if (selectedRole === 'consultor') {
+      setUsername('consultor@demo.com');
+      setPassword('12345');
+    } else if (selectedRole === 'reclutador') {
+      setUsername('reclutador@demo.com');
+      setPassword('12345');
+    }
+  };
 
   // Función que se ejecuta cuando se envía el formulario (al hacer clic en el botón "Iniciar Sesión")
   const handleSubmit = async (event) => {
@@ -63,7 +72,6 @@ function LoginForm() {
       // --- Log de depuración: Muestra el resultado de la función login ---
       console.log('3. Resultado de la llamada a login:', result);
       // --- Fin de log ---
-
 
       // Verifica si el resultado de la llamada a login indica éxito
       if (result.success) {
@@ -89,8 +97,6 @@ function LoginForm() {
           default:
             // Si el rol devuelto no coincide con ninguno esperado
             console.warn('4d. Rol desconocido devuelto por login:', result.role);
-            // Opcional: redirigir a una página de error o al login de nuevo
-            // navigate('/login');
             break;
         }
         // --- Fin de Lógica de Redirección Directa ---
@@ -118,18 +124,45 @@ function LoginForm() {
 
         {/* Título y subtítulo del formulario */}
         {/* Aplicamos el color 'secondary' al título desde colors.js */}
-        <h1 className="system-title" style={{ color: colors.secondary }}>Sistema de Eventos</h1>
+        <h1 className="system-title" style={{ color: colors.secondary }}>Sistema de Eventos CCB</h1>
         <p className="subtitle">Ingresa con tus credenciales</p>
+
+        {/* Información de usuarios de prueba */}
+        <div style={{ 
+          backgroundColor: '#f0f8ff', 
+          padding: '10px', 
+          borderRadius: '5px', 
+          marginBottom: '15px',
+          fontSize: '12px',
+          border: '1px solid #d0e7ff'
+        }}>
+          <strong>Usuarios de prueba disponibles:</strong><br/>
+          <button 
+            type="button" 
+            onClick={fillTestData}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: colors.primary,
+              textDecoration: 'underline',
+              cursor: 'pointer',
+              fontSize: '12px',
+              padding: '2px'
+            }}
+          >
+            📧 Usar datos de prueba para {selectedRole}
+          </button>
+        </div>
 
         {/* Formulario en sí. El onSubmit={handleSubmit} conecta el evento de envío del formulario con la función */}
         <form onSubmit={handleSubmit}>
-          {/* Grupo para el campo de Usuario */}
+          {/* Grupo para el campo de Email */}
           <div className="form-group">
-            <label htmlFor="username">Usuario</label>
+            <label htmlFor="username">Email</label>
             <input
-              type="text"
+              type="email"
               id="username" // El id debe coincidir con el htmlFor de la etiqueta label
-              placeholder="Ingresa tu usuario"
+              placeholder="ejemplo@demo.com"
               value={username} // El valor del input está controlado por el estado 'username'
               onChange={(e) => setUsername(e.target.value)} // Cuando cambia el input, actualiza el estado 'username'
               required // Hace que el campo sea obligatorio
