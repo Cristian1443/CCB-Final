@@ -1,633 +1,374 @@
 // src/pages/Gestora/NuevaProgramacionPage.js
 import React, { useState, useEffect } from "react";
 // Importamos Link para la navegación
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import DashboardLayout from "../../components/DashboardLayout";
 import "./NuevaProgramacionPage.css";
 import { colors } from "../../colors";
 import * as XLSX from "xlsx";
-import { useNavigate } from 'react-router-dom'; // Importa useNavigate
-import { getConsultores, saveConsultores } from '../../data/dataConsultores';
-
-
+import apiService from "../../utils/api";
 
 function NuevaProgramacionPage() {
-  const [inputMethod, setInputMethod] = useState("manual");
   const navigate = useNavigate();
+  
   // =========================================================================
-  // Estados para los campos del formulario manual
+  // Estados para datos de la base de datos
   // =========================================================================
-  const [ruta, setRuta] = useState("");
-  const [sector, setSector] = useState(""); // Estado para el sector
-  const [programa, setPrograma] = useState("");
-  const [coordinadorCCB, setCoordinadorCCB] = useState("");
-  const [numeroContrato, setNumeroContrato] = useState("");
-  const [codigoAgenda, setCodigoAgenda] = useState("");
+  const [actividades, setActividades] = useState([]);
+  const [modalidades, setModalidades] = useState([]);
+  const [programas, setProgramas] = useState([]);
+  const [regiones, setRegiones] = useState([]);
+  const [municipios, setMunicipios] = useState([]);
+  const [contratos, setContratos] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // =========================================================================
+  // Estados para el formulario
+  // =========================================================================
+  const [actividadSeleccionada, setActividadSeleccionada] = useState("");
+  const [programaSeleccionado, setProgramaSeleccionado] = useState("");
+  const [rutaSeleccionada, setRutaSeleccionada] = useState("");
+  const [modalidadSeleccionada, setModalidadSeleccionada] = useState("");
+  const [regionSeleccionada, setRegionSeleccionada] = useState("");
+  const [municipioSeleccionado, setMunicipioSeleccionado] = useState("");
+  const [contratoSeleccionado, setContratoSeleccionado] = useState("");
+
+  // Campos comunes para ambos tipos
   const [tematica, setTematica] = useState("");
   const [mes, setMes] = useState("");
   const [fechaFormacion, setFechaFormacion] = useState("");
-  const [dia, setDia] = useState("");
   const [horaInicio, setHoraInicio] = useState("");
   const [horaFin, setHoraFin] = useState("");
-  const [horasProgramadasTaller, setHorasProgramadasTaller] = useState("");
-  const [tipoActividad, setTipoActividad] = useState("");
-  const [modalidad, setModalidad] = useState("");
-  const [lugar, setLugar] = useState("");
-  const [region, setRegion] = useState("");
-  const [numeroRegion, setnumeroRegion] = useState("");
-  const [isRegionEnabled, setIsRegionEnabled] = useState(false);
-  const [municipio, setMunicipio] = useState("");
-  const [municipiosFiltrados, setMunicipiosFiltrados] = useState([]);
-  const [enlaceVirtual, setEnlaceVirtual] = useState("");
-  const [envioProgramacion, setEnvioProgramacion] = useState("");
-  const [estadoActividad, setEstadoActividad] = useState("");
-  const [numeroAsistentes, setNumeroAsistentes] = useState("");
-  // Estados del consultor que se llenarán automáticamente
-  const [nombreConsultor, setNombreConsultor] = useState("");
-  const [cedula, setCedula] = useState("");
-  const [emailConsultor, setEmailConsultor] = useState("");
-  const [celular, setCelular] = useState("");
+  const [horasDictar, setHorasDictar] = useState("");
+  const [coordinadorCCB, setCoordinadorCCB] = useState("");
   const [direccion, setDireccion] = useState("");
-  const [especialidad, setEspecialidad] = useState("");
-  // Otros estados
-  const [tipoVinculacion, setTipoVinculacion] = useState("");
-  const [horasPagarDocente, setHorasPagarDocente] = useState("");
-  const [horasCobrarCCB, setHorasCobrarCCB] = useState("");
-  const [clasificacionValorHora, setClasificacionValorHora] = useState("");
-  const [valorHora, setValorHora] = useState("");
-  const [gastosTraslado, setGastosTraslado] = useState("");
-  const [valorTotalPagarDocente, setValorTotalPagarDocente] = useState("");
-  const [valorHoraCobrarCCB, setValorHoraCobrarCCB] = useState("");
-  const [valorTotalCobrarCCB, setValorTotalCobrarCCB] = useState("");
-  const [numeroOAMPConsultor, setNumeroOAMPConsultor] = useState("");
-  const [fechaInicioOAMPConsultor, setFechaInicioOAMPConsultor] = useState("");
+  const [enlace, setEnlace] = useState("");
+  const [codigoAgenda, setCodigoAgenda] = useState("");
   const [entregables, setEntregables] = useState("");
   const [dependencia, setDependencia] = useState("");
   const [observaciones, setObservaciones] = useState("");
-  const [programasFiltrados, setProgramasFiltrados] = useState([]);
-  const [rutasFiltradas, setRutasFiltradas] = useState([]);
-  const [sectoresFiltrados, setSectoresFiltrados] = useState([]);
-  const [consultores, setConsultores] = useState([]);
+
+  // Campos específicos para programaciones individuales
+  const [nombreEmpresario, setNombreEmpresario] = useState("");
+  const [identificacionEmpresario, setIdentificacionEmpresario] = useState("");
+
+  // Campos calculados
+  const [horasPagar, setHorasPagar] = useState("");
+  const [horasCobrar, setHorasCobrar] = useState("");
+  const [valorHora, setValorHora] = useState("");
+  const [valorTotalPagar, setValorTotalPagar] = useState("");
+  const [valorTotalCobrar, setValorTotalCobrar] = useState("");
+
+  // Estados para información del consultor seleccionado
+  const [consultorSeleccionado, setConsultorSeleccionado] = useState(null);
+
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
   // =========================================================================
-
+  // Efectos para cargar datos de la base de datos
   // =========================================================================
-  // Datos Mock de Consultores (En una app real, esto vendría de una API)
-  // =========================================================================
-  
-  
-  // =========================================================================
-
-  const clasificacionOption = [80000, 85000, 90000, 95000, 100000, 105000];
-
-  const regiones = {
-    1: {
-      municipios: [
-        "Cajicá",
-        "Chía",
-        "Cogua",
-        "Cota",
-        "Gachancipá",
-        "Granada",
-        "La Calera",
-        "Nemocón",
-        "Sibaté",
-        "Soacha rural",
-        "Sopó",
-        "Tabio",
-        "Tenjo",
-        "Tocancipá",
-        "Zipaquirá",
-      ],
-      valorHora: 90000,
-      traslado: 30000,
-      sinHoras: 30000,
-      dosHoras: 105000,
-      tresHoras: 100000,
-      cuatroOMas: 97500,
-    },
-    2: {
-      municipios: [
-        "Choachí",
-        "Chocontá",
-        "Gachetá",
-        "Guasca",
-        "Guatavita",
-        "Machetá",
-        "Manta",
-        "Sesquilé",
-        "Suesca",
-        "Villa Pinzón",
-      ],
-      valorHora: 95000,
-      traslado: 60000,
-      sinHoras: 60000,
-      dosHoras: 125000,
-      tresHoras: 115000,
-      cuatroOMas: 110000,
-    },
-    3: {
-      municipios: [
-        "Arbeláez",
-        "Cabrera",
-        "Cáqueza",
-        "Chipaque",
-        "Fómeque",
-        "Fosca",
-        "Fusagasugá",
-        "Gachalá",
-        "Gama",
-        "Guayabetal",
-        "Gutiérrez",
-        "Junín",
-        "Medina",
-        "Pandi",
-        "Pasca",
-        "Quetame",
-        "San Bernardo",
-        "Silvania",
-        "Tibacuy",
-        "Ubalá",
-        "Ubaque",
-        "Une",
-        "Venecia",
-      ],
-      valorHora: 100000,
-      traslado: 85000,
-      sinHoras: 85000,
-      dosHoras: 142500,
-      tresHoras: 128333,
-      cuatroOMas: 121250,
-    },
-    4: {
-      municipios: [
-        "Carmen De Carupa",
-        "Cucunubá",
-        "Fúquene",
-        "Guachetá",
-        "Lenguazaque",
-        "Simijaca",
-        "Susa",
-        "Sutatausa",
-        "Tausa",
-        "Ubaté",
-      ],
-      valorHora: 105000,
-      traslado: 110000,
-      sinHoras: 110000,
-      dosHoras: 160000,
-      tresHoras: 141666,
-      cuatroOMas: 132500,
-    },
-  };
-
-  const programaRutaSectorMap = {
-    "Crecimiento Empresarial": {
-      rutas: ["Economia Popular"],
-      sectores: { "Economia Popular": ["Economia Popular"] },
-    },
-    Emprendimiento: {
-      rutas: ["INNOVACION", "EMPRENDIMIENTO"],
-      sectores: {
-        INNOVACION: ["Innovación"],
-        EMPRENDIMIENTO: ["Bogota Emprende y Cundinamarca Emprende"],
-      },
-    },
-    "Consolidación y escalamiento empresarial": {
-      rutas: [
-        "ESTRATEGIA FINANCIERA Y RENDICIÓN DE CUENTAS PARA EL SECTOR MODA E INDUSTRIAS CREATIVAS Y CULTURALES",
-        "FORTALECIMIENTO DE EQUIPOS DE VENTA PARA EL SECTOR MODA",
-        "PROGRAMACIÓN ABIERTA Y REGIÓN",
-        "CICLOS FOCALIZADOS - MULTISECTORIAL",
-        "SECTOR ALIMENTOS, FINANCIERO Y PRODUCTIVIDAD",
-        "INTERNACIONALIZACIÓN",
-        "Plan de internacinalización",
-      ],
-      sectores: {
-        "ESTRATEGIA FINANCIERA Y RENDICIÓN DE CUENTAS PARA EL SECTOR MODA E INDUSTRIAS CREATIVAS Y CULTURALES":
-          [
-            "Estrategia Financiera y Rendición de Cuentas para el Sector Moda e Industrias Creativas y Culturales",
-          ],
-        "FORTALECIMIENTO DE EQUIPOS DE VENTA PARA EL SECTOR MODA": [
-          "Fortalecimiento de Equipos de Venta para el Sector Moda",
-        ],
-        "PROGRAMACIÓN ABIERTA Y REGIÓN": ["No aplica"],
-        "CICLOS FOCALIZADOS - MULTISECTORIAL": [
-          "Gestión del Talento Humano para el sector construcción",
-          "Excelencia para el sector Turismo",
-          "Proyectos financieros con proposito y Gestion financiera en empresas de servicios empresariales",
-          "Transformación digital",
-          "Tecnología en modelos de negocio y servicios de Consultoria",
-          "Tecnología en Cadena de abastecimiento - (Logistica)",
-          "Programa de Desarrollo proveedores",
-        ],
-        "SECTOR ALIMENTOS, FINANCIERO Y PRODUCTIVIDAD": [
-          "Indicadores de gestión",
-          "Metodologias de mejoramiento de la Productividad",
-          "Gestión Finaciero",
-        ],
-        INTERNACIONALIZACIÓN: ["Talleres", "Asesorias individales"],
-        "Plan de internacinalización": [
-          "INTERNACIONALIZACION - Entregable - Preseleccion de mercado",
-          "INTERNACIONALIZACION - Entregable - MarketFit",
-          "INTERNACIONALIZACION - Entregable - One Pager",
-        ],
-      },
-    },
-  };
-  const actualizarValoresPorRegion = (regionData, horas) => {
-    setValorHora(regionData.valorHora);
-    setClasificacionValorHora(regionData.valorHora);
-    setValorHoraCobrarCCB(regionData.valorHora);
-    setGastosTraslado(regionData.traslado);
-
-    if (!isNaN(horas)) {
-      setHorasCobrarCCB(horas);
-
-      let totalDocente = regionData.valorHora * horas;
-      if (horas === 2) totalDocente = regionData.dosHoras;
-      else if (horas === 3) totalDocente = regionData.tresHoras;
-      else if (horas >= 4) totalDocente = regionData.cuatroOMas;
-      else if (horas === 0) totalDocente = regionData.sinHoras;
-
-      setValorTotalPagarDocente(formatCOP(totalDocente));
-
-      const totalCCB = regionData.valorHora * horas + regionData.traslado;
-      setValorTotalCobrarCCB(formatCOP(totalCCB));
-    }
-  };
-
-  const formatCOP = (value) =>
-    new Intl.NumberFormat("es-CO", {
-      style: "currency",
-      currency: "COP",
-      minimumFractionDigits: 0,
-    }).format(value);
-
-  // Manejador de cambio de clasificación
-  const handleClasificacionChange = (e) => {
-    const selectedValue = e.target.value;
-    setClasificacionValorHora(selectedValue);
-    setValorHora(selectedValue); // actualiza automáticamente el valorHora
-  };
-
   useEffect(() => {
-    if (isRegionEnabled || !ruta || !modalidad) return;
+    const cargarDatosIniciales = async () => {
+      try {
+        setLoading(true);
+        
+        const [
+          actividadesRes,
+          modalidadesRes,
+          programaRutasRes,
+          regionesRes,
+          contratosRes
+        ] = await Promise.all([
+          apiService.getActividades(),
+          apiService.getModalidades(),
+          apiService.getProgramaRutas(),
+          apiService.getRegiones(),
+          apiService.getContratos()
+        ]);
 
-    const rutasEspeciales = [
-      "INNOVACION",
-      "INTERNACIONALIZACIÓN",
-      "Plan de internacinalización",
-    ];
-    let valor = 0;
+        if (actividadesRes.success) setActividades(actividadesRes.data.actividades);
+        if (modalidadesRes.success) setModalidades(modalidadesRes.data.modalidades);
+        if (programaRutasRes.success) setProgramas(programaRutasRes.data.programas);
+        if (regionesRes.success) setRegiones(regionesRes.data.regiones);
+        if (contratosRes.success) {
+          console.log('🔍 Contratos recibidos del backend:', contratosRes.data.contratos);
+          setContratos(contratosRes.data.contratos);
+        }
 
-    if (modalidad === "Virtual") {
-      valor = rutasEspeciales.includes(ruta) ? 90000 : 80000;
-    } else if (modalidad === "Presencial" || modalidad === "Hibrido") {
-      valor = rutasEspeciales.includes(ruta) ? 95000 : 85000;
+      } catch (error) {
+        console.error('Error cargando datos:', error);
+        setError('Error cargando los datos iniciales');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    cargarDatosIniciales();
+  }, []);
+
+  // Efecto para cargar municipios cuando cambia la región
+  useEffect(() => {
+    const cargarMunicipios = async () => {
+      if (!regionSeleccionada) {
+        setMunicipios([]);
+      return;
     }
 
-    setClasificacionValorHora(valor);
-    setValorHora(valor);
-    setValorHoraCobrarCCB(valor);
-  }, [ruta, modalidad, isRegionEnabled]);
+      try {
+        const result = await apiService.getMunicipiosByRegion(regionSeleccionada);
+        if (result.success) {
+          setMunicipios(result.data.municipios);
+        }
+      } catch (error) {
+        console.error('Error cargando municipios:', error);
+      }
+    };
 
-  useEffect(() => {
-    if (isRegionEnabled) return; // Solo aplica si NO hay región
+    cargarMunicipios();
+  }, [regionSeleccionada]);
 
-    setHorasCobrarCCB(horasPagarDocente);
-    setValorHoraCobrarCCB(valorHora);
+  // =========================================================================
+  // Funciones auxiliares
+  // =========================================================================
+  
+  const esActividadGrupal = () => {
+    const actividad = actividades.find(a => a.act_id.toString() === actividadSeleccionada);
+    return actividad && actividad.act_tipo.includes('TALLERES') || actividad?.act_tipo.includes('GRUPALES') || actividad?.act_tipo.includes('CÁPSULAS');
+  };
 
-    const valor = parseFloat(valorHora);
-    const horas = parseFloat(horasPagarDocente);
+  const esActividadIndividual = () => {
+    const actividad = actividades.find(a => a.act_id.toString() === actividadSeleccionada);
+    return actividad && actividad.act_tipo.includes('INDIVIDUALES');
+  };
 
-    if (!isNaN(horas) && !isNaN(valor)) {
-      const totalPagarDocente = horas * valor;
-      const totalCobrarCCB = totalPagarDocente * 2; // Se cobra el doble
+  const obtenerRutasDelPrograma = () => {
+    const programa = programas.find(p => p.prog_id.toString() === programaSeleccionado);
+    return programa ? programa.rutas : [];
+  };
 
-      setValorTotalPagarDocente(formatCOP(totalPagarDocente));
-      setValorTotalCobrarCCB(formatCOP(totalCobrarCCB));
+  // Función helper para formatear nombres completos
+  const formatearNombreCompleto = (contrato) => {
+    if (!contrato) return '';
+    
+    const nombres = [
+      contrato.usu_primer_nombre,
+      contrato.usu_segundo_nombre,
+      contrato.usu_primer_apellido,
+      contrato.usu_segundo_apellido
+    ].filter(Boolean); // Filtrar valores falsy (null, undefined, '')
+    
+    return nombres.join(' ');
+  };
+
+  // Función helper para formatear nombre en dropdown
+  const formatearNombreDropdown = (contrato) => {
+    const nombreCompleto = formatearNombreCompleto(contrato);
+    return `OAMP ${contrato.oamp} - ${nombreCompleto} (C.C. ${contrato.usu_cedula})`;
+  };
+
+  const calcularValores = () => {
+    // Aquí implementar la lógica de cálculo según región, horas, etc.
+    // Por ahora valores por defecto
+    const horas = parseInt(horasDictar) || 0;
+    const valorBase = 85000; // Valor base por hora
+    
+    setHorasPagar(horas.toString());
+    setHorasCobrar(horas.toString());
+    setValorHora(valorBase.toString());
+    setValorTotalPagar((horas * valorBase).toString());
+    setValorTotalCobrar((horas * valorBase * 2).toString()); // CCB cobra el doble
+  };
+
+  // Función para verificar completitud de datos del consultor
+  const verificarCompleitudDatos = (consultor) => {
+    const camposFaltantes = [];
+    
+    if (!consultor.usu_primer_nombre) camposFaltantes.push('Primer nombre');
+    if (!consultor.usu_primer_apellido) camposFaltantes.push('Primer apellido');
+    if (!consultor.usu_segundo_apellido) camposFaltantes.push('Segundo apellido');
+    if (!consultor.usu_telefono || consultor.usu_telefono === 'No especificado') camposFaltantes.push('Teléfono');
+    if (!consultor.usu_direccion || consultor.usu_direccion === 'No especificada') camposFaltantes.push('Dirección');
+    if (!consultor.are_descripcion || consultor.are_descripcion === 'No especificada') camposFaltantes.push('Área de conocimiento');
+    
+    return camposFaltantes;
+  };
+
+  // Función para manejar selección de contrato
+  const handleContratoChange = (contratoId) => {
+    setContratoSeleccionado(contratoId);
+    
+    // Buscar y establecer información del consultor
+    const contrato = contratos.find(c => c.oamp.toString() === contratoId);
+    if (contrato) {
+      // Sanitizar los datos para manejar valores null/undefined
+      const consultorData = {
+        ...contrato,
+        usu_segundo_nombre: contrato.usu_segundo_nombre || '',
+        usu_telefono: contrato.usu_telefono || 'No especificado',
+        usu_direccion: contrato.usu_direccion || 'No especificada',
+        are_descripcion: contrato.are_descripcion || 'No especificada'
+      };
+      
+      setConsultorSeleccionado(consultorData);
+      
+      // Verificar completitud de datos
+      const camposFaltantes = verificarCompleitudDatos(consultorData);
+      if (camposFaltantes.length > 0) {
+        console.warn('⚠️ Campos faltantes en el consultor:', camposFaltantes);
+        // Opcional: mostrar alerta no intrusiva
+        setTimeout(() => {
+          if (window.confirm(`Algunos datos del consultor están incompletos:\n• ${camposFaltantes.join('\n• ')}\n\n¿Desea continuar de todas formas?`)) {
+            console.log('✅ Usuario decidió continuar con datos incompletos');
+          }
+        }, 500);
+      }
+      
+      // Debug: mostrar datos en consola
+      console.log('🔍 Consultor seleccionado:', consultorData);
     } else {
-      setValorTotalCobrarCCB("");
-      setValorTotalPagarDocente("");
+      setConsultorSeleccionado(null);
     }
-  }, [horasPagarDocente, valorHora, isRegionEnabled]);
-
-  useEffect(() => {
-    if (!region) {
-      setIsRegionEnabled(false);
-      setMunicipiosFiltrados([]);
-      setMunicipio("");
-      setGastosTraslado("");
-      return;
-    }
-
-    const regionData = regiones[region];
-    if (regionData) {
-      setIsRegionEnabled(true);
-      setMunicipiosFiltrados(regionData.municipios);
-      setGastosTraslado(regionData.traslado);
-    }
-  }, [region]);
-
-  useEffect(() => {
-    if (!isRegionEnabled || !municipio) return;
-
-    const regionData = Object.values(regiones).find((reg) =>
-      reg.municipios.some((m) => m.toLowerCase() === municipio.toLowerCase())
-    );
-
-    if (!regionData) return;
-
-    const horas = parseFloat(horasPagarDocente);
-    if (isNaN(horas)) return;
-
-    actualizarValoresPorRegion(regionData, horas);
-  }, [isRegionEnabled, municipio, horasPagarDocente]);
-
-  useEffect(() => {
-    if (!programa) {
-      setRutasFiltradas([]);
-      setSectoresFiltrados([]);
-      return;
-    }
-
-    const data = programaRutaSectorMap[programa];
-    if (data) {
-      setRutasFiltradas(data.rutas);
-      setSectoresFiltrados(data.sectores[ruta] || []);
-    }
-  }, [programa, ruta]);
-
-  // Actualizar sectores cuando cambia la ruta
-  useEffect(() => {
-    if (!ruta || !programa) {
-      setSectoresFiltrados([]);
-      return;
-    }
-
-    const data = programaRutaSectorMap[programa];
-    if (data && data.sectores[ruta]) {
-      setSectoresFiltrados(data.sectores[ruta]);
-    }
-  }, [ruta, programa]);
-
-  // =========================================================================
-  // Función para manejar el cambio en el campo Nombre del Consultor
-  // =========================================================================
-  
-  const handleNombreConsultorChange = (e) => {
-  const nombre = e.target.value;
-  setNombreConsultor(nombre);
-
-  // Buscar el consultor por nombre
-  const consultores = getConsultores();
-  const consultor = consultores.find(c => c.nombre === nombre);
-
-
-  if (consultor) {
-    setCedula(consultor.cedula);
-    setEmailConsultor(consultor.email);
-    setCelular(consultor.celular);
-    setDireccion(consultor.direccion);
-    setEspecialidad(consultor.especialidad);
-    setNumeroOAMPConsultor(consultor.consecutivoOAMP);
-    setFechaInicioOAMPConsultor(consultor.fechaFirmaOAMP)
-  } else {
-    // Si no encuentra coincidencia, limpia los campos
-    setCedula("");
-    setEmailConsultor("");
-    setCelular("");
-    setDireccion("");
-    setEspecialidad("");
-    setNumeroOAMPConsultor("");
-    setFechaInicioOAMPConsultor("");
-  }
-};
-useEffect(() => {
-  const consultoresAlmacenados = getConsultores();
-  setConsultores(consultoresAlmacenados);
-}, []);
-
-  // =========================================================================
-  const handleManualSubmit = (e) => {
-  e.preventDefault();
-
-  const nuevoEvento = {
-    id: Date.now().toString(),
-    title: tematica,
-    program: programa,
-    sector: sector,
-    location: lugar,
-    date: fechaFormacion,
-    time: horaInicio,
-    endTime: horaFin,
-    modality: modalidad,
-    status: estadoActividad,
-    instructor: nombreConsultor,
-    specialty: especialidad,
-    participants: numeroAsistentes,
   };
 
-  // Guardar evento en eventos generales
-  const eventosGuardados = JSON.parse(localStorage.getItem("eventos")) || [];
-  const nuevosEventos = [...eventosGuardados, nuevoEvento];
-  localStorage.setItem("eventos", JSON.stringify(nuevosEventos));
-
-  // ACTUALIZAR assignedEvents del consultor
-  const consultores = getConsultores();
-
-  const indexConsultor = consultores.findIndex(c => c.nombre === nombreConsultor);
-  if (indexConsultor !== -1) {
-    // Añadir nuevo evento a assignedEvents del consultor
-    if (!consultores[indexConsultor].assignedEvents) {
-      consultores[indexConsultor].assignedEvents = [];
+  useEffect(() => {
+    if (horasDictar) {
+      calcularValores();
     }
-    consultores[indexConsultor].assignedEvents.push(nuevoEvento);
+  }, [horasDictar, regionSeleccionada, municipioSeleccionado]);
 
-    // Guardar consultores actualizados
-    saveConsultores(consultores);
-  }
+  // =========================================================================
+  // Función para enviar el formulario
+  // =========================================================================
+  
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+    setSuccess("");
 
-  alert("Programación guardada exitosamente");
+    try {
+      const ruta = obtenerRutasDelPrograma().find(r => r.pr_id.toString() === rutaSeleccionada);
+      
+      if (!ruta) {
+        setError("Ruta no encontrada");
+        return;
+      }
 
-  // Redirigir (recuerda definir navigate con useNavigate)
-  navigate("/gestora");
-};
+      // Datos comunes
+      const datosComunes = {
+        pr_id: parseInt(rutaSeleccionada),
+        act_id: parseInt(actividadSeleccionada),
+        mod_id: parseInt(modalidadSeleccionada),
+        oamp: parseInt(contratoSeleccionado),
+        val_reg_id: regionSeleccionada ? parseInt(regionSeleccionada) : null,
+        pro_codigo_agenda: parseInt(codigoAgenda),
+        pro_mes: mes,
+        pro_fecha_formacion: fechaFormacion,
+        pro_hora_inicio: horaInicio,
+        pro_hora_fin: horaFin,
+        pro_horas_dictar: parseInt(horasDictar),
+        pro_coordinador_ccb: coordinadorCCB,
+        pro_direccion: direccion,
+        pro_enlace: enlace,
+        pro_numero_hora_pagar: parseInt(horasPagar),
+        pro_numero_hora_cobrar: parseInt(horasCobrar),
+        pro_valor_hora: parseFloat(valorHora),
+        pro_valor_total_hora_pagar: parseFloat(valorTotalPagar),
+        pro_valor_total_hora_ccb: parseFloat(valorTotalCobrar),
+        pro_entregables: entregables,
+        pro_dependencia: dependencia,
+        pro_observaciones: observaciones
+      };
 
-  function convertExcelTimeTo24HourFormat(timeStr) {
-  // Ej: "2:30 PM" -> "14:30"
-  if (typeof timeStr !== 'string') return '';
+      let result;
 
-  const [time, modifier] = timeStr.trim().split(' ');
-  let [hours, minutes] = time.split(':');
+      if (esActividadGrupal()) {
+        // Programación grupal
+        result = await apiService.createProgramacionGrupal({
+          ...datosComunes,
+          pro_tematica: tematica
+        });
+      } else if (esActividadIndividual()) {
+        // Programación individual - cambiar prefijos pro_ por proin_
+        const datosIndividuales = {};
+        Object.keys(datosComunes).forEach(key => {
+          if (key.startsWith('pro_')) {
+            datosIndividuales[key.replace('pro_', 'proin_')] = datosComunes[key];
+          } else {
+            datosIndividuales[key] = datosComunes[key];
+          }
+        });
 
-  hours = parseInt(hours, 10);
-  if (modifier.toUpperCase() === 'PM' && hours !== 12) {
-    hours += 12;
-  }
-  if (modifier.toUpperCase() === 'AM' && hours === 12) {
-    hours = 0;
-  }
+        result = await apiService.createProgramacionIndividual({
+          ...datosIndividuales,
+          proin_tematica: tematica,
+          proin_nombre_empresario: nombreEmpresario,
+          proin_identificacion_empresario: identificacionEmpresario
+        });
+      }
 
-  return `${String(hours).padStart(2, '0')}:${minutes}`;
-}
-function convertExcelTime(value) {
-  // Si es un número decimal de Excel
-  if (!isNaN(value)) {
-    const totalMinutes = Math.round(value * 24 * 60); // convertir días a minutos
-    const hours = Math.floor(totalMinutes / 60);
-    const minutes = totalMinutes % 60;
-    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
-  }
+      if (result && result.success) {
+        setSuccess("Programación creada exitosamente");
+        setTimeout(() => {
+          navigate("/gestora");
+        }, 2000);
+      } else {
+        setError(result?.message || "Error al crear la programación");
+      }
 
-  // Si es texto con AM/PM
-  if (typeof value === 'string') {
-    const match = value.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
-    if (match) {
-      return convertExcelTimeTo24HourFormat(value);
+    } catch (error) {
+      console.error('Error:', error);
+      setError(error.message || "Error al enviar el formulario");
     }
-  }
+  };
 
-  return '';
-}
-
-
-
-  function formatExcelDate(value) {
-  // Si es un número (formato de fecha Excel), conviértelo
-  if (!isNaN(value)) {
-    const date = XLSX.SSF.parse_date_code(value);
-    const year = date.y;
-    const month = String(date.m).padStart(2, '0');
-    const day = String(date.d).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  }
-
-  // Si ya es una cadena, intenta transformarla desde dd/mm/yyyy a yyyy-mm-dd
-  if (typeof value === 'string' && value.includes('/')) {
-    const parts = value.split('/');
-    if (parts.length === 3) {
-      const [day, month, year] = parts;
-      return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
-    }
-  }
-
-  // Si no se pudo convertir, retorna tal cual
-  return value;
-}
-
-
-  const handleFileUpload = (event) => {
-    const file = event.target.files[0];
-    if (!file) {
-      alert("No se seleccionó ningún archivo.");
-      return;
-    }
-  
-    console.log("Archivo seleccionado:", file.name);
-    alert(`Archivo seleccionado: ${file.name}`);
-  
-    const reader = new FileReader();
-  
-    reader.onload = (e) => {
-      const data = new Uint8Array(e.target.result);
-      const workbook = XLSX.read(data, { type: "array" });
-      console.log("Workbook leído correctamente:", workbook);
-  
-      const sheetName = workbook.SheetNames[0];
-      const worksheet = workbook.Sheets[sheetName];
-  
-      // Usa `range` para eliminar filas vacías antes del encabezado si existen
-      const range = XLSX.utils.decode_range(worksheet['!ref']);
-      range.s.r = 0; // Asegura que comienza desde la primera fila (índice 0)
-      worksheet['!ref'] = XLSX.utils.encode_range(range);
-  
-      // Lee los datos con encabezados desde la fila 1
-      const jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: "", header: 1 });
-  
-      if (jsonData.length < 2) {
-        alert("El archivo está vacío o mal formateado.");
+  // Función para hacer debug específico del consultor
+  const debugConsultorActual = async () => {
+    if (!consultorSeleccionado?.usu_cedula) {
+      alert('No hay consultor seleccionado');
         return;
       }
   
-      const headers = jsonData[0];
-      const firstRow = jsonData[1];
-  
-      const row = {};
-      headers.forEach((header, index) => {
-        row[header] = firstRow[index] ?? "";
-      });
-  
-      console.log("Primera fila interpretada:", row);
-  
-      // Asignaciones
-      setRuta(row["Ruta"] || "");
-      setSector(row["Sector"] || "");
-      setPrograma(row["Programa"] || "");
-      setCoordinadorCCB(row["CoordinadorCCB"] || "");
-      setNumeroContrato(row["NúmeroContrato"] || "");
-      setCodigoAgenda(row["CódigoAgenda"] || "");
-      setTematica(row["Temática"] || "");
-      setMes(row["Mes"] || "");
-      setFechaFormacion(formatExcelDate(row["FechaFormación"] || ""));
-      setDia(row["Día"] || "");
-      setHoraInicio(convertExcelTime(row["HoraInicio"]));
-      setHoraFin(convertExcelTime(row["HoraFin"]));
-      setHorasProgramadasTaller(row["HorasProgramadasTaller"] || "");
-      setTipoActividad(row["TipoActividad"] || "");
-      setModalidad(row["Modalidad"] || "");
-      setLugar(row["Lugar"] || "");
-      setRegion(row["Región"] || "");
-      setEnlaceVirtual(row["EnlaceVirtual"] || "");
-      setEstadoActividad(row["EstadoActividad"] || "");
-      setNombreConsultor(row["NombreConsultor"] || "");
-      setCedula(row["Cédula"] || "");
-      setEmailConsultor(row["Email"] || "");
-      setCelular(row["Celular"] || "");
-      setDireccion(row["Dirección"] || "");
-      setTipoVinculacion(row["TipoVinculación"] || "");
-      setHorasPagarDocente(row["HorasPagarDocente"] || "");
-      setHorasCobrarCCB(row["HorasCobrarCCB"] || "");
-      setClasificacionValorHora(row["ClasificaciónValorHora"] || "");
-      setValorHora(row["ValorHora"] || "");
-      setGastosTraslado(row["GastosTraslado"] || "");
-      setValorTotalPagarDocente(row["ValorTotalPagarDocente"] || "");
-      setValorHoraCobrarCCB(row["ValorHoraCobrarCCB"] || "");
-      setValorTotalCobrarCCB(row["ValorTotalCobrarCCB"] || "");
-      setNumeroOAMPConsultor(row["NúmeroOAMPConsultor"] || "");
-      setFechaInicioOAMPConsultor(formatExcelDate(row["FechaInicioOAMPConsultor"] || ""));
-      setEntregables(row["Entregables"] || "");
-      setDependencia(row["Dependencia"] || "");
-      setObservaciones(row["Observaciones"] || "");
-  
-      const regionEstado = !!row["Región"];
-      console.log("¿Región habilitada?:", regionEstado);
-      setIsRegionEnabled(regionEstado);
-  
-      alert(`Se extrajeron correctamente los datos del archivo: ${file.name}`);
-    };
-  
-    reader.onerror = (error) => {
-      console.error("Error al leer el archivo:", error);
-      alert("Hubo un error al leer el archivo.");
-    };
-  
-    reader.readAsArrayBuffer(file);
+    try {
+      const result = await apiService.debugConsultor(consultorSeleccionado.usu_cedula);
+      console.log('🔍 Debug consultor desde API:', result);
+      
+      if (result.success && result.data.consultor) {
+        alert(`Debug Consultor:\n${JSON.stringify(result.data.consultor, null, 2)}`);
+      } else {
+        alert('No se encontraron datos del consultor');
+      }
+    } catch (error) {
+      console.error('Error en debug:', error);
+      alert('Error al obtener debug del consultor');
+    }
   };
-  
-  
+
+  // =========================================================================
+  // Renderizado del componente
+  // =========================================================================
+
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <div className="nueva-programacion-content">
+          <div className="loading-container">
+            <h2>Cargando datos...</h2>
+            <div className="spinner"></div>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
       <div className="nueva-programacion-content">
-        {/* Contenedor para el título de la página y el botón de volver */}
         <div className="page-header">
           <div>
             <h2>Panel de Gestión</h2>
             <h1>Nueva Programación</h1>
           </div>
-          {/* Botón para volver al Dashboard */}
           <Link
             to="/gestora"
             className="back-button"
@@ -641,688 +382,502 @@ function convertExcelTime(value) {
           </Link>
         </div>
 
-        {/* Opciones para elegir método de entrada */}
-        <div className="input-method-selector">
-          <button
-            className={`method-button ${
-              inputMethod === "manual" ? "active" : ""
-            }`}
-            onClick={() => setInputMethod("manual")}
-            style={{
-              backgroundColor:
-                inputMethod === "manual" ? colors.primary : "transparent",
-              color: inputMethod === "manual" ? "white" : colors.secondary,
-            }}
-          >
-            Llenado Manual
-          </button>
-          <button
-            className={`method-button ${
-              inputMethod === "excel" ? "active" : ""
-            }`}
-            onClick={() => setInputMethod("excel")}
-            style={{
-              backgroundColor:
-                inputMethod === "excel" ? colors.primary : "transparent",
-              color: inputMethod === "excel" ? "white" : colors.secondary,
-            }}
-          >
-            Cargar Excel
-          </button>
+        {error && (
+          <div className="alert alert-error">
+            {error}
         </div>
+        )}
 
-        {inputMethod === "excel" && (
-          <div className="excel-upload-section">
-            <h3>Cargar Programación desde Excel</h3>
-            <input
-              type="file"
-              accept=".xls,.xlsx"
-              onChange={handleFileUpload}
-            />
-            <p>
-              Por favor, asegúrate de que tu archivo Excel tenga el formato
-              correcto.
-            </p>
+        {success && (
+          <div className="alert alert-success">
+            {success}
           </div>
         )}
 
-        {inputMethod === "manual" && (
-          <div className="manual-form-section">
-            <h3>Llenar Programación Manualmente</h3>
-            <form onSubmit={handleManualSubmit}>
-              {/* ==================================================== */}
-              {/* GRUPO 1: Información Básica del Evento */}
-              {/* ==================================================== */}
-              <div className="form-group-container">
-                <h4>Información del Evento</h4>
+        <form onSubmit={handleSubmit} className="programacion-form">
+          {/* Sección 1: Tipo de Actividad */}
+          <div className="form-section">
+            <h3>Tipo de Actividad</h3>
                 <div className="form-grid">
-                  {/* Campo: Programa */}
                   <div className="form-group">
-                    <label htmlFor="programa">Programa</label>
+                <label htmlFor="actividad">Tipo de Actividad *</label>
                     <select
-                      id="programa"
-                      value={programa}
-                      onChange={(e) => setPrograma(e.target.value)}
+                  id="actividad"
+                  value={actividadSeleccionada}
+                  onChange={(e) => setActividadSeleccionada(e.target.value)}
                       required
                     >
-                      <option value="">Selecciona un Programa</option>
-                      {Object.keys(programaRutaSectorMap).map((prog) => (
-                        <option key={prog} value={prog}>
-                          {prog}
+                  <option value="">Selecciona una actividad</option>
+                  {actividades.map((actividad) => (
+                    <option key={actividad.act_id} value={actividad.act_id}>
+                      {actividad.act_tipo}
                         </option>
                       ))}
                     </select>
                   </div>
-                  {/* Campo: Ruta */}
+
                   <div className="form-group">
-                    <label htmlFor="ruta">Ruta</label>
+                <label htmlFor="modalidad">Modalidad *</label>
+                    <select
+                  id="modalidad"
+                  value={modalidadSeleccionada}
+                  onChange={(e) => setModalidadSeleccionada(e.target.value)}
+                      required
+                    >
+                  <option value="">Selecciona una modalidad</option>
+                  {modalidades.map((modalidad) => (
+                    <option key={modalidad.mod_id} value={modalidad.mod_id}>
+                      {modalidad.mod_nombre}
+                        </option>
+                      ))}
+                    </select>
+              </div>
+            </div>
+                  </div>
+
+          {/* Sección 2: Programa y Ruta */}
+          {actividadSeleccionada && (
+            <div className="form-section">
+              <h3>Programa y Ruta</h3>
+              <div className="form-grid">
+                  <div className="form-group">
+                  <label htmlFor="programa">Programa *</label>
+                    <select
+                    id="programa"
+                    value={programaSeleccionado}
+                    onChange={(e) => {
+                      setProgramaSeleccionado(e.target.value);
+                      setRutaSeleccionada(""); // Reset ruta when programa changes
+                    }}
+                      required
+                    >
+                    <option value="">Selecciona un programa</option>
+                    {programas.map((programa) => (
+                      <option key={programa.prog_id} value={programa.prog_id}>
+                        {programa.prog_nombre}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                {programaSeleccionado && (
+                  <div className="form-group">
+                    <label htmlFor="ruta">Ruta *</label>
                     <select
                       id="ruta"
-                      value={ruta}
-                      onChange={(e) => setRuta(e.target.value)}
+                      value={rutaSeleccionada}
+                      onChange={(e) => setRutaSeleccionada(e.target.value)}
                       required
                     >
-                      <option value="">Selecciona una Ruta</option>
-                      {rutasFiltradas.map((ruta) => (
-                        <option key={ruta} value={ruta}>
-                          {ruta}
-                        </option>
+                      <option value="">Selecciona una ruta</option>
+                      {obtenerRutasDelPrograma().map((ruta) => (
+                        <option key={ruta.pr_id} value={ruta.pr_id}>
+                          {ruta.rut_nombre}
+                      </option>
                       ))}
                     </select>
                   </div>
+                )}
 
-                  {/* Campo: Sector */}
                   <div className="form-group">
-                    <label htmlFor="sector">Sector</label>
+                  <label htmlFor="contrato">Contrato OAMP *</label>
                     <select
-                      id="sector"
-                      value={sector}
-                      onChange={(e) => setSector(e.target.value)}
+                    id="contrato"
+                    value={contratoSeleccionado}
+                    onChange={(e) => handleContratoChange(e.target.value)}
                       required
                     >
-                      <option value="">Selecciona un Sector</option>
-                      {sectoresFiltrados.map((sector) => (
-                        <option key={sector} value={sector}>
-                          {sector}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* Campo: Temática */}
-                  <div className="form-group">
-                    <label htmlFor="tematica">Temática</label>
-                    <input
-                      type="text"
-                      id="tematica"
-                      value={tematica}
-                      onChange={(e) => setTematica(e.target.value)}
-                      required
-                    />
-                  </div>
-
-                  {/* Campo: Tipo de Actividad */}
-                  <div className="form-group">
-                    <label htmlFor="tipoActividad">Tipo de Actividad</label>
-                    <select
-                      id="tipoActividad"
-                      value={tipoActividad}
-                      onChange={(e) => setTipoActividad(e.target.value)}
-                      required
-                    >
-                      <option value="">Selecciona un Programa</option>
-                      <option value="Talleres">Talleres</option>
-                      <option value="Asesorias Grupales o Capsulas">
-                        Asesorias Grupales o Capsulas
+                    <option value="">Selecciona un contrato</option>
+                    {contratos.map((contrato) => (
+                      <option key={contrato.oamp} value={contrato.oamp}>
+                        {formatearNombreDropdown(contrato)}
                       </option>
-                      <option value="Asesorias Individuales">
-                        Asesorias Individuales
-                      </option>
+                    ))}
                     </select>
                   </div>
-
-                  {/* Campo: Modalidad */}
-                  <div className="form-group">
-                    <label htmlFor="modalidad">Modalidad</label>
-                    <select
-                      id="modalidad"
-                      value={modalidad}
-                      onChange={(e) => setModalidad(e.target.value)}
-                      required
-                    >
-                      <option value="">Selecciona Modalidad</option>
-                      <option value="Presencial">Presencial</option>
-                      <option value="Virtual">Virtual</option>
-                      <option value="Hibrido">Híbrido</option>
-                    </select>
                   </div>
+            </div>
+          )}
 
-                  {/* Campo: Lugar (Condicional según Modalidad) */}
+          {/* Sección 3: Información Básica */}
+          {rutaSeleccionada && (
+            <div className="form-section">
+              <h3>Información Básica</h3>
+              <div className="form-grid">
                   <div className="form-group">
-                    <label htmlFor="lugar">Lugar</label>
+                  <label htmlFor="tematica">Temática *</label>
                     <input
-                      type="text"
-                      id="lugar"
-                      value={lugar}
-                      onChange={(e) => setLugar(e.target.value)}
-                    />
-                  </div>
-
-                  {/* Campo: N asitentes (Condicional según Numero de asistentes) */}
-                  <div className="form-group">
-                    <label htmlFor="numeroAsistentes">Numero de Asistentes</label>
-                    <input
-                      type="Number"
-                      id="numeroAsistentes"
-                      value={numeroAsistentes}
-                      onChange={(e) => setNumeroAsistentes(e.target.value)}
+                    type="text"
+                    id="tematica"
+                    value={tematica}
+                    onChange={(e) => setTematica(e.target.value)}
                       required
                     />
                   </div>
 
-                  {/* Campo: Region - CAMBIADO A SELECT */}
                   <div className="form-group">
-                    <label htmlFor="region">Región</label>
+                  <label htmlFor="mes">Mes *</label>
                     <select
-                      id="region"
-                      value={region}
-                      onChange={(e) => setRegion(e.target.value)}
-                    >
-                      <option value="">Selecciona una región</option>
-                      <option value="1">Región 1</option>
-                      <option value="2">Región 2</option>
-                      <option value="3">Región 3</option>
-                      <option value="4">Región 4</option>
-                    </select>
-                  </div>
-
-                  {isRegionEnabled && (
-                    <div className="form-group">
-                      <label htmlFor="municipio">Municipio</label>
-                      <select
-                        id="municipio"
-                        value={municipio}
-                        onChange={(e) => setMunicipio(e.target.value)}
+                    id="mes"
+                    value={mes}
+                    onChange={(e) => setMes(e.target.value)}
                         required
                       >
-                        <option value="">Selecciona un municipio</option>
-                        {municipiosFiltrados.map((mun) => (
-                          <option key={mun} value={mun}>
-                            {mun}
-                          </option>
-                        ))}
+                    <option value="">Selecciona un mes</option>
+                    <option value="Enero">Enero</option>
+                    <option value="Febrero">Febrero</option>
+                    <option value="Marzo">Marzo</option>
+                    <option value="Abril">Abril</option>
+                    <option value="Mayo">Mayo</option>
+                    <option value="Junio">Junio</option>
+                    <option value="Julio">Julio</option>
+                    <option value="Agosto">Agosto</option>
+                    <option value="Septiembre">Septiembre</option>
+                    <option value="Octubre">Octubre</option>
+                    <option value="Noviembre">Noviembre</option>
+                    <option value="Diciembre">Diciembre</option>
                       </select>
                     </div>
-                  )}
 
-                  {/* Campo: Enlace Virtual / híbrido (Condicional según Modalidad) */}
                   <div className="form-group">
-                    <label htmlFor="enlaceVirtual">
-                      Enlace Virtual / Híbrido
-                    </label>
+                  <label htmlFor="fechaFormacion">Fecha de Formación *</label>
                     <input
-                      type="url"
-                      id="enlaceVirtual"
-                      value={enlaceVirtual}
-                      onChange={(e) => setEnlaceVirtual(e.target.value)}
+                    type="date"
+                    id="fechaFormacion"
+                    value={fechaFormacion}
+                    onChange={(e) => setFechaFormacion(e.target.value)}
+                    required
                     />
                   </div>
 
-                  {/* Campo: Estado de la Actividad */}
                   <div className="form-group">
-                    <label htmlFor="estadoActividad">
-                      Estado de la Actividad
-                    </label>
+                  <label htmlFor="horaInicio">Hora Inicio *</label>
                     <input
-                      type="text"
-                      id="estadoActividad"
-                      value={estadoActividad}
-                      onChange={(e) => setEstadoActividad(e.target.value)}
+                    type="time"
+                    id="horaInicio"
+                    value={horaInicio}
+                    onChange={(e) => setHoraInicio(e.target.value)}
                       required
                     />
                   </div>
 
-                  {/* Campo: Coordinador CCB */}
                   <div className="form-group">
-                    <label htmlFor="coordinadorCCB">Coordinador CCB</label>
+                  <label htmlFor="horaFin">Hora Fin *</label>
                     <input
-                      type="text"
-                      id="coordinadorCCB"
-                      value={coordinadorCCB}
-                      onChange={(e) => setCoordinadorCCB(e.target.value)}
+                    type="time"
+                    id="horaFin"
+                    value={horaFin}
+                    onChange={(e) => setHoraFin(e.target.value)}
                       required
                     />
                   </div>
 
-                  {/* Campo: Coordinador CCB */}
                   <div className="form-group">
-                    <label htmlFor="codigoAgenda">Codigo Agenda</label>
+                  <label htmlFor="horasDictar">Horas a Dictar *</label>
                     <input
-                      type="text"
-                      id="codigoAgenda"
-                      value={codigoAgenda}
-                      onChange={(e) => setCodigoAgenda(e.target.value)}
+                    type="number"
+                    id="horasDictar"
+                    value={horasDictar}
+                    onChange={(e) => setHorasDictar(e.target.value)}
+                    min="1"
                       required
                     />
                   </div>
 
-                  {/* Campo: Dependencia */}
                   <div className="form-group">
-                    <label htmlFor="dependencia">Dependencia</label>
+                  <label htmlFor="coordinadorCCB">Coordinador CCB</label>
                     <input
                       type="text"
-                      id="dependencia"
-                      value={dependencia}
-                      onChange={(e) => setDependencia(e.target.value)}
+                    id="coordinadorCCB"
+                    value={coordinadorCCB}
+                    onChange={(e) => setCoordinadorCCB(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                  <label htmlFor="direccion">Dirección *</label>
+                    <input
+                      type="text"
+                    id="direccion"
+                    value={direccion}
+                    onChange={(e) => setDireccion(e.target.value)}
                       required
                     />
                   </div>
-                </div>
-                {/* Cierra form-grid */}
+
+                  <div className="form-group">
+                  <label htmlFor="enlace">Enlace Virtual</label>
+                    <input
+                    type="url"
+                    id="enlace"
+                    value={enlace}
+                    onChange={(e) => setEnlace(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                  <label htmlFor="codigoAgenda">Código Agenda *</label>
+                    <input
+                    type="number"
+                    id="codigoAgenda"
+                    value={codigoAgenda}
+                    onChange={(e) => setCodigoAgenda(e.target.value)}
+                      required
+                    />
+                  </div>
+
+                  <div className="form-group">
+                  <label htmlFor="dependencia">Dependencia *</label>
+                    <input
+                    type="text"
+                    id="dependencia"
+                    value={dependencia}
+                    onChange={(e) => setDependencia(e.target.value)}
+                      required
+                    />
+                  </div>
               </div>
-              {/* Cierra form-group-container */}
-              {/* ==================================================== */}
-              {/* GRUPO 2: Fechas y Horarios */}
-              {/* ==================================================== */}
-              <div className="form-group-container">
-                <h4>Fechas y Horarios</h4>
+            </div>
+          )}
+
+          {/* Sección 4: Campos específicos para asesorías individuales */}
+          {esActividadIndividual() && rutaSeleccionada && (
+            <div className="form-section">
+              <h3>Información del Empresario (Asesoría Individual)</h3>
+              <div className="form-grid">
+                  <div className="form-group">
+                  <label htmlFor="nombreEmpresario">Nombre del Empresario *</label>
+                    <input
+                    type="text"
+                    id="nombreEmpresario"
+                    value={nombreEmpresario}
+                    onChange={(e) => setNombreEmpresario(e.target.value)}
+                      required
+                    />
+                  </div>
+
+                  <div className="form-group">
+                  <label htmlFor="identificacionEmpresario">Identificación del Empresario *</label>
+                    <input
+                    type="text"
+                    id="identificacionEmpresario"
+                    value={identificacionEmpresario}
+                    onChange={(e) => setIdentificacionEmpresario(e.target.value)}
+                      required
+                    />
+                  </div>
+              </div>
+            </div>
+          )}
+
+          {/* Sección 5: Región (opcional) */}
+          {rutaSeleccionada && (
+            <div className="form-section">
+              <h3>Región (Opcional)</h3>
                 <div className="form-grid">
-                  {/* Campo: Mes */}
                   <div className="form-group">
-                    <label htmlFor="mes">Mes</label>
-                    <input
-                      type="text"
-                      id="mes"
-                      value={mes}
-                      onChange={(e) => setMes(e.target.value)}
-                      required
-                    />
-                  </div>
-
-                  {/* Campo: Fecha de la Formación */}
-                  <div className="form-group">
-                    <label htmlFor="fechaFormacion">
-                      Fecha de la Formación
-                    </label>
-                    <input
-                      type="date"
-                      id="fechaFormacion"
-                      value={fechaFormacion}
-                      onChange={(e) => setFechaFormacion(e.target.value)}
-                      required
-                    />
-                  </div>
-
-                  {/* Campo: Día */}
-                  <div className="form-group">
-                    <label htmlFor="dia">Día</label>
-                    <input
-                      type="text"
-                      id="dia"
-                      value={dia}
-                      onChange={(e) => setDia(e.target.value)}
-                      required
-                    />
-                  </div>
-
-                  {/* Campo: Hora Inicio */}
-                  <div className="form-group">
-                    <label htmlFor="horaInicio">Hora Inicio</label>
-                    <input
-                      type="time"
-                      id="horaInicio"
-                      value={horaInicio}
-                      onChange={(e) => setHoraInicio(e.target.value)}
-                      required
-                    />
-                  </div>
-
-                  {/* Campo: Hora Fin */}
-                  <div className="form-group">
-                    <label htmlFor="horaFin">Hora Fin</label>
-                    <input
-                      type="time"
-                      id="horaFin"
-                      value={horaFin}
-                      onChange={(e) => setHoraFin(e.target.value)}
-                      required
-                    />
-                  </div>
-
-                  {/* Campo: Horas Programadas Taller */}
-                  <div className="form-group">
-                    <label htmlFor="horasProgramadasTaller">
-                      Horas Programadas Taller
-                    </label>
-                    <input
-                      type="number"
-                      id="horasProgramadasTaller"
-                      value={horasProgramadasTaller}
-                      onChange={(e) =>
-                        setHorasProgramadasTaller(e.target.value)
-                      }
-                      required
-                    />
-                  </div>
-                </div>{" "}
-                {/* Cierra form-grid */}
-              </div>{" "}
-              {/* Cierra form-group-container */}
-              {/* ==================================================== */}
-              {/* GRUPO 3: Información del Consultor */}
-              {/* ==================================================== */}
-              <div className="form-group-container">
-                <h4>Información del Consultor</h4>
-                <div className="form-grid">
-                  {/* Campo: Nombre del Consultor - CON ONCHANGE PARA AUTOLLENAR */}
-                  <div className="form-group">
-                    <label htmlFor="nombreConsultor">
-                      Nombre del Consultor
-                    </label>
+                  <label htmlFor="region">Región</label>
                     <select
-  id="nombreConsultor"
-  value={nombreConsultor}
-  onChange={handleNombreConsultorChange}
-  required
->
-  <option value="">Seleccione un consultor</option>
-  {consultores.map((c) => (
-    <option key={c.cedula} value={c.nombre}>
-      {c.nombre}
+                    id="region"
+                    value={regionSeleccionada}
+                    onChange={(e) => setRegionSeleccionada(e.target.value)}
+                  >
+                    <option value="">Sin región específica</option>
+                    {regiones.map((region) => (
+                      <option key={region.reg_id} value={region.val_reg_id}>
+                        Región {region.reg_id}
     </option>
   ))}
 </select>
-
                   </div>
 
-                  {/* Campo: Cédula - SE LLENARÁ AUTOMATICAMENTE */}
+                {regionSeleccionada && (
                   <div className="form-group">
-                    <label htmlFor="cedula">Cédula</label>
-                    <input
-                      type="number"
-                      id="cedula"
-                      value={cedula}
-                      onChange={(e) => setCedula(e.target.value)} // Permite edición manual si es necesario
-                      required
-                      readOnly // Opcional: Puedes hacerlo de solo lectura si no quieres que se edite
-                    />
-                  </div>
-
-                  {/* Campo: E- mail Personal / E - mail corporativo - SE LLENARÁ AUTOMATICAMENTE */}
-                  <div className="form-group">
-                    <label htmlFor="emailConsultor">E-mail Consultor</label>
-                    <input
-                      type="email"
-                      id="emailConsultor"
-                      value={emailConsultor}
-                      onChange={(e) => setEmailConsultor(e.target.value)} // Permite edición manual
-                      required
-                      readOnly // Opcional: Solo lectura
-                    />
-                  </div>
-
-                  {/* Campo: Celular - SE LLENARÁ AUTOMATICAMENTE */}
-                  <div className="form-group">
-                    <label htmlFor="celular">Celular</label>
-                    <input
-                      type="tel"
-                      id="celular"
-                      value={celular}
-                      onChange={(e) => setCelular(e.target.value)} // Permite edición manual
-                      required
-                      readOnly // Opcional: Solo lectura
-                    />
-                  </div>
-
-                  {/* Campo: Dirección - SE LLENARÁ AUTOMATICAMENTE */}
-                  <div className="form-group">
-                    <label htmlFor="direccion">Dirección</label>
-                    <input
-                      type="text"
-                      id="direccion"
-                      value={direccion}
-                      onChange={(e) => setDireccion(e.target.value)} // Permite edición manual
-                      required
-                      readOnly // Opcional: Solo lectura
-                    />
-                  </div>
-
-                  {/* Campo: Especialidad - SE LLENARÁ AUTOMATICAMENTE */}
-                  <div className="form-group">
-                    <label htmlFor="especialidad">Especialidad</label>
-                    <input
-                      type="text"
-                      id="especialidad"
-                      value={especialidad}
-                      onChange={(e) => setEspecialidad(e.target.value)} // Permite edición manual
-                      required
-                      readOnly // Opcional: Solo lectura
-                    />
-                  </div>
-
-                  {/* Campo: Tipo de Vinculación */}
-                  <div className="form-group">
-                    <label htmlFor="tipoVinculacion">Tipo de Vinculación</label>
-                    <input
-                      type="text"
-                      id="tipoVinculacion"
-                      value={tipoVinculacion}
-                      onChange={(e) => setTipoVinculacion(e.target.value)}
-                      required
-                    />
-                  </div>
-
-                  {/* Campo: Número de OAMP Consultor */}
-                  <div className="form-group">
-                    <label htmlFor="numeroOAMPConsultor">
-                      N° OAMP Consultor
-                    </label>
-                    <input
-                      type="text"
-                      id="numeroOAMPConsultor"
-                      value={numeroOAMPConsultor}
-                      onChange={(e) => setNumeroOAMPConsultor(e.target.value)}
-                      required
-                    />
-                  </div>
-
-                  {/* Campo: Fecha Inicio de OAMP Consultor */}
-                  <div className="form-group">
-                    <label htmlFor="fechaInicioOAMPConsultor">
-                      Fecha Inicio OAMP Consultor
-                    </label>
-                    <input
-                      type="date"
-                      id="fechaInicioOAMPConsultor"
-                      value={fechaInicioOAMPConsultor}
-                      onChange={(e) =>
-                        setFechaInicioOAMPConsultor(e.target.value)
-                      }
-                      required
-                    />
-                  </div>
-                </div>{" "}
-                {/* Cierra form-grid */}
-              </div>{" "}
-              {/* Cierra form-group-container */}
-              {/* ==================================================== */}
-              {/* GRUPO 4: Información de Pago */}
-              {/* ==================================================== */}
-              <div className="form-group-container">
-                <h4>Información de Pago</h4>
-                <div className="form-grid">
-                  {/* Campo: Número de Horas a Pagar al Docente */}
-                  <div className="form-group">
-                    <label htmlFor="horasPagarDocente">
-                      N° Horas a Pagar Docente
-                    </label>
-                    <input
-                      type="number"
-                      id="horasPagarDocente"
-                      value={horasPagarDocente}
-                      onChange={(e) => setHorasPagarDocente(e.target.value)}
-                      required
-                    />
-                  </div>
-
-                  {/* Campo: Número de Horas a Cobrar a CCB */}
-                  <div className="form-group">
-                    <label htmlFor="horasCobrarCCB">
-                      N° Horas a Cobrar CCB
-                    </label>
-                    <input
-                      type="number"
-                      id="horasCobrarCCB"
-                      value={horasCobrarCCB}
-                      onChange={(e) => setHorasCobrarCCB(e.target.value)}
-                      readOnly
-                    />
-                  </div>
-
-                  {/* Campo: Clasificación Valor Hora */}
-                  <div className="form-group">
-                    <label htmlFor="clasificacionValorHora">
-                      Clasificación Valor Hora
-                    </label>
+                    <label htmlFor="municipio">Municipio</label>
                     <select
-                      id="clasificacionValorHora"
-                      value={clasificacionValorHora}
-                      onChange={handleClasificacionChange}
-                      required
+                      id="municipio"
+                      value={municipioSeleccionado}
+                      onChange={(e) => setMunicipioSeleccionado(e.target.value)}
                     >
-                      <option value="">
-                        Selecciona una clasificación de valor de hora
-                      </option>
-                      {clasificacionOption.map((option, index) => (
-                        <option key={index} value={option}>
-                          {formatCOP(option)}
+                      <option value="">Selecciona un municipio</option>
+                      {municipios.map((municipio) => (
+                        <option key={municipio.mun_id} value={municipio.mun_nombre}>
+                          {municipio.mun_nombre}
                         </option>
                       ))}
                     </select>
                   </div>
+                )}
+              </div>
+            </div>
+          )}
 
-                  {/* Campo: Valor Hora */}
+          {/* Sección 6: Valores Calculados */}
+          {horasDictar && (
+            <div className="form-section">
+              <h3>Valores Calculados</h3>
+              <div className="form-grid">
                   <div className="form-group">
-                    <label htmlFor="valorHora">Valor Hora</label>
+                  <label>Horas a Pagar</label>
+                  <input type="text" value={horasPagar} readOnly />
+                  </div>
+
+                  <div className="form-group">
+                  <label>Horas a Cobrar</label>
+                  <input type="text" value={horasCobrar} readOnly />
+                  </div>
+
+                  <div className="form-group">
+                  <label>Valor por Hora</label>
+                  <input type="text" value={`$${parseInt(valorHora || 0).toLocaleString()}`} readOnly />
+                  </div>
+
+                  <div className="form-group">
+                  <label>Valor Total a Pagar</label>
+                  <input type="text" value={`$${parseInt(valorTotalPagar || 0).toLocaleString()}`} readOnly />
+                  </div>
+
+                  <div className="form-group">
+                  <label>Valor Total a Cobrar CCB</label>
+                  <input type="text" value={`$${parseInt(valorTotalCobrar || 0).toLocaleString()}`} readOnly />
+                  </div>
+              </div>
+            </div>
+          )}
+
+          {/* Sección 7: Información Adicional */}
+          {rutaSeleccionada && (
+            <div className="form-section">
+              <h3>Información Adicional</h3>
+              <div className="form-grid">
+                <div className="form-group full-width">
+                  <label htmlFor="entregables">Entregables</label>
+                  <textarea
+                    id="entregables"
+                    value={entregables}
+                    onChange={(e) => setEntregables(e.target.value)}
+                    rows="3"
+                    />
+                  </div>
+
+                <div className="form-group full-width">
+                  <label htmlFor="observaciones">Observaciones</label>
+                  <textarea
+                    id="observaciones"
+                    value={observaciones}
+                    onChange={(e) => setObservaciones(e.target.value)}
+                    rows="3"
+                    />
+                  </div>
+              </div>
+            </div>
+          )}
+
+          {/* Sección nueva: Información del Consultor Seleccionado */}
+          {consultorSeleccionado && (
+            <div className="form-section consultor-info-section">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px' }}>
+                <h3 style={{ margin: 0 }}>📋 Información del Consultor Asignado</h3>
+                <button 
+                  type="button"
+                  onClick={debugConsultorActual}
+                  style={{
+                    padding: '8px 16px',
+                    backgroundColor: '#ff9800',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontSize: '0.85rem'
+                  }}
+                >
+                  🔍 Debug Datos
+                </button>
+              </div>
+                <div className="form-grid">
+                  <div className="form-group">
+                  <label>Nombres Completos</label>
                     <input
-                      type="text"
-                      id="valorHora"
-                      value={valorHora ? formatCOP(valorHora) : ""}
-                      onChange={(e) => setValorHora(e.target.value)}
+                    type="text" 
+                    value={formatearNombreCompleto(consultorSeleccionado)} 
+                    readOnly 
+                    style={{ backgroundColor: formatearNombreCompleto(consultorSeleccionado) ? '#e3f2fd' : '#ffebee' }}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                  <label>Cédula</label>
+                    <input
+                    type="text" 
+                    value={consultorSeleccionado.usu_cedula || 'No disponible'} 
                       readOnly
                     />
                   </div>
 
-                  {/* Campo: Gastos de Traslado */}
-                  {isRegionEnabled && (
+                  <div className="form-group">
+                  <label>Teléfono</label>
+                    <input
+                      type="text"
+                    value={consultorSeleccionado.usu_telefono} 
+                      readOnly
+                    style={{ backgroundColor: consultorSeleccionado.usu_telefono === 'No especificado' ? '#fff3e0' : '#e3f2fd' }}
+                    />
+                  </div>
+
                     <div className="form-group">
-                      <label htmlFor="gastosTraslado">Valor Traslado</label>
+                  <label>Dirección</label>
                       <input
                         type="text"
-                        id="gastosTraslado"
-                        value={formatCOP(gastosTraslado)}
+                    value={consultorSeleccionado.usu_direccion} 
                         readOnly
+                    style={{ backgroundColor: consultorSeleccionado.usu_direccion === 'No especificada' ? '#fff3e0' : '#e3f2fd' }}
                       />
                     </div>
-                  )}
 
-                  {/* Campo: Valor Total a Pagar al Docente */}
-                  <div className="form-group">
-                    <label htmlFor="valorTotalPagarDocente">
-                      Valor Total a Pagar Docente
-                    </label>
+                <div className="form-group full-width">
+                  <label>Área de Conocimiento</label>
                     <input
                       type="text"
-                      id="valorTotalPagarDocente"
-                      value={valorTotalPagarDocente}
-                      onChange={(e) =>
-                        setValorTotalPagarDocente(e.target.value)
-                      }
-                      required
+                    value={consultorSeleccionado.are_descripcion} 
+                    readOnly 
+                    style={{ backgroundColor: consultorSeleccionado.are_descripcion === 'No especificada' ? '#fff3e0' : '#e3f2fd' }}
                     />
                   </div>
 
-                  {/* Campo: Valor Hora a Cobrar a CCB */}
                   <div className="form-group">
-                    <label htmlFor="valorHoraCobrarCCB">
-                      Valor Hora a Cobrar CCB
-                    </label>
+                  <label>Valor Total del Contrato</label>
                     <input
                       type="text"
-                      id="valorHoraCobrarCCB"
-                      value={
-                        valorHoraCobrarCCB ? formatCOP(valorHoraCobrarCCB) : ""
-                      }
-                      onChange={(e) => setValorHoraCobrarCCB(e.target.value)}
+                    value={`$${parseInt(consultorSeleccionado.oamp_valor_total || 0).toLocaleString()}`} 
                       readOnly
                     />
                   </div>
 
-                  {/* Campo: Valor Total a Cobrar a CCB */}
                   <div className="form-group">
-                    <label htmlFor="valorTotalCobrarCCB">
-                      Valor Total a Cobrar CCB
-                    </label>
+                  <label>Fecha Generación Contrato</label>
                     <input
                       type="text"
-                      id="valorTotalCobrarCCB"
-                      value={valorTotalCobrarCCB}
-                      onChange={(e) => setValorTotalCobrarCCB(e.target.value)}
-                      required
+                    value={new Date(consultorSeleccionado.oamp_fecha_generacion).toLocaleDateString('es-CO')} 
+                    readOnly 
                     />
                   </div>
-                </div>{" "}
-                {/* Cierra form-grid */}
-              </div>{" "}
-              {/* Cierra form-group-container */}
-              {/* ==================================================== */}
-              {/* GRUPO 5: Entregables y Observaciones */}
-              {/* ==================================================== */}
-              <div className="form-group-container">
-                <h4>Otros Detalles</h4>
-                <div className="form-grid">
-                  {/* Campo: Entregables */}
-                  <div className="form-group full-width">
-                    <label htmlFor="entregables">Entregables</label>
-                    <textarea
-                      id="entregables"
-                      value={entregables}
-                      onChange={(e) => setEntregables(e.target.value)}
-                      required
-                    ></textarea>
                   </div>
+                  </div>
+          )}
 
-                  {/* Campo: Observaciones */}
-                  <div className="form-group full-width">
-                    <label htmlFor="observaciones">Observaciones</label>
-                    <textarea
-                      id="observaciones"
-                      value={observaciones}
-                      onChange={(e) => setObservaciones(e.target.value)}
-                      required
-                    ></textarea>
-                  </div>
-
-                  {/* Campo: Cargue Evidencia (Puede ir aquí o en otro grupo si es post-evento) */}
-                  <div className="form-group full-width">
-                    <label htmlFor="cargueEvidencia">Cargue Evidencia</label>
-                    <input type="file" id="cargueEvidencia" />
-                  </div>
-                </div>{" "}
-                {/* Cierra form-grid */}
-              </div>{" "}
-              {/* Cierra form-group-container */}
-              {/* Botón de envío del formulario manual */}
+          {/* Botón de envío */}
+          {rutaSeleccionada && (
+            <div className="form-actions">
               <button
                 type="submit"
                 className="submit-button"
-                style={{ backgroundColor: colors.secondary, color: "white" }}
+                style={{ backgroundColor: colors.primary }}
               >
-                Guardar Programación
+                Crear Programación
               </button>
-            </form>
           </div>
         )}
+        </form>
       </div>
     </DashboardLayout>
   );

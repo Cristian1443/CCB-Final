@@ -12,7 +12,6 @@ const eventosRoutes = require('./routes/eventos');
 const pagosRoutes = require('./routes/pagos');
 const evidenciasRoutes = require('./routes/evidencias');
 const vacantesRoutes = require('./routes/vacantes');
-const actividadesRoutes = require('./routes/actividades');
 const programacionesRoutes = require('./routes/programaciones');
 
 const app = express();
@@ -40,7 +39,6 @@ app.use('/api/eventos', eventosRoutes);
 app.use('/api/pagos', pagosRoutes);
 app.use('/api/evidencias', evidenciasRoutes);
 app.use('/api/vacantes', vacantesRoutes);
-app.use('/api/actividades', actividadesRoutes);
 app.use('/api/programaciones', programacionesRoutes);
 
 // Ruta de prueba
@@ -129,4 +127,4 @@ process.on('SIGINT', () => {
 });
 
 // Iniciar servidor
-startServer();
+startServer(); 

@@ -133,26 +133,65 @@ class ApiService {
     return this.request(`/vacantes${queryString ? `?${queryString}` : ''}`);
   }
 
-  // Métodos para actividades
-  async getActividades() {
-    return this.request('/actividades');
-  }
+  // ========== MÉTODOS PARA PROGRAMACIONES ==========
 
-  async createActividad(actividadData) {
-    return this.request('/actividades', {
-      method: 'POST',
-      body: JSON.stringify(actividadData),
-    });
-  }
-
-  // Métodos para programaciones
+  // Obtener todas las programaciones (grupales e individuales)
   async getProgramaciones(params = {}) {
     const queryString = new URLSearchParams(params).toString();
     return this.request(`/programaciones${queryString ? `?${queryString}` : ''}`);
   }
 
-  async createProgramacion(programacionData) {
-    return this.request('/programaciones', {
+  // Obtener estadísticas para el dashboard
+  async getDashboardStats() {
+    return this.request('/programaciones/dashboard-stats');
+  }
+
+  // Obtener actividades (talleres, asesorías grupales, individuales)
+  async getActividades() {
+    return this.request('/programaciones/actividades');
+  }
+
+  // Obtener modalidades (virtual, presencial, híbrido)
+  async getModalidades() {
+    return this.request('/programaciones/modalidades');
+  }
+
+  // Obtener programas con sus rutas
+  async getProgramaRutas() {
+    return this.request('/programaciones/programa-rutas');
+  }
+
+  // Obtener regiones con valores de horas
+  async getRegiones() {
+    return this.request('/programaciones/regiones');
+  }
+
+  // Obtener municipios por región
+  async getMunicipiosByRegion(regionId) {
+    return this.request(`/programaciones/municipios/${regionId}`);
+  }
+
+  // Obtener contratos disponibles
+  async getContratos() {
+    return this.request('/programaciones/contratos');
+  }
+
+  // Debug: Obtener información específica de un consultor
+  async debugConsultor(cedula) {
+    return this.request(`/programaciones/debug-consultor/${cedula}`);
+  }
+
+  // Crear programación grupal (talleres, asesorías grupales, cápsulas)
+  async createProgramacionGrupal(programacionData) {
+    return this.request('/programaciones/grupal', {
+      method: 'POST',
+      body: JSON.stringify(programacionData),
+    });
+  }
+
+  // Crear programación individual (asesorías individuales)
+  async createProgramacionIndividual(programacionData) {
+    return this.request('/programaciones/individual', {
       method: 'POST',
       body: JSON.stringify(programacionData),
     });
@@ -170,4 +209,4 @@ class ApiService {
 
 // Exportar instancia singleton
 const apiService = new ApiService();
-export default apiService;
+export default apiService; 
