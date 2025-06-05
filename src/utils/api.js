@@ -181,6 +181,24 @@ class ApiService {
     return this.request(`/programaciones/debug-consultor/${cedula}`);
   }
 
+  // Calcular valores de una ruta específica
+  async calcularValoresRuta(pr_id, val_reg_id, mod_id, horas_dictar) {
+    const params = new URLSearchParams({
+      pr_id,
+      horas_dictar
+    });
+    
+    if (val_reg_id && val_reg_id !== 'null' && val_reg_id !== '') {
+      params.append('val_reg_id', val_reg_id);
+    }
+    
+    if (mod_id && mod_id !== 'null' && mod_id !== '') {
+      params.append('mod_id', mod_id);
+    }
+    
+    return this.request(`/programaciones/calcular-valores?${params.toString()}`);
+  }
+
   // Crear programación grupal (talleres, asesorías grupales, cápsulas)
   async createProgramacionGrupal(programacionData) {
     return this.request('/programaciones/grupal', {
@@ -193,6 +211,26 @@ class ApiService {
   async createProgramacionIndividual(programacionData) {
     return this.request('/programaciones/individual', {
       method: 'POST',
+      body: JSON.stringify(programacionData),
+    });
+  }
+
+  // Obtener una programación específica para edición
+  async getProgramacion(id) {
+    return this.request(`/programaciones/${id}`);
+  }
+
+  // Eliminar programación
+  async deleteProgramacion(id) {
+    return this.request(`/programaciones/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  // Actualizar programación
+  async updateProgramacion(id, programacionData) {
+    return this.request(`/programaciones/${id}`, {
+      method: 'PUT',
       body: JSON.stringify(programacionData),
     });
   }

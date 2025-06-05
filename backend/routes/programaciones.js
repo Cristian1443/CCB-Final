@@ -290,6 +290,125 @@ router.get('/debug-consultor/:cedula', authenticateToken, async (req, res) => {
   }
 });
 
+// GET /api/programaciones/calcular-valores - Calcular valores de una ruta específica
+router.get('/calcular-valores', authenticateToken, async (req, res) => {
+  try {
+    const { pr_id, val_reg_id, mod_id, horas_dictar } = req.query;
+
+    // Validar parámetros requeridos
+    if (!pr_id || !horas_dictar) {
+      return res.status(400).json({
+        success: false,
+        message: 'pr_id y horas_dictar son requeridos'
+      });
+    }
+
+    let valorHora = 0;
+    let horasPagar = parseInt(horas_dictar);
+    let horasCobrar = parseInt(horas_dictar);
+
+    // Si hay región específica, usar los valores de valor_horas_region
+    if (val_reg_id && val_reg_id !== 'null' && val_reg_id !== '') {
+      const regionQuery = await executeQuery(`
+        SELECT 
+          val_reg_hora_base,
+          val_reg_traslado,
+          val_reg_sin_dictar,
+          val_reg_dos_horas,
+          val_reg_tres_horas,
+          val_reg_cuatro_mas_horas
+        FROM valor_horas_region
+        WHERE val_reg_id = ?
+      `, [val_reg_id]);
+
+      if (regionQuery.success && regionQuery.data.length > 0) {
+        const valores = regionQuery.data[0];
+        
+        // Determinar valor según las horas a dictar
+        if (horasPagar === 0) {
+          valorHora = valores.val_reg_sin_dictar;
+        } else if (horasPagar === 2) {
+          valorHora = valores.val_reg_dos_horas;
+        } else if (horasPagar === 3) {
+          valorHora = valores.val_reg_tres_horas;
+        } else if (horasPagar >= 4) {
+          valorHora = valores.val_reg_cuatro_mas_horas;
+        } else {
+          valorHora = valores.val_reg_hora_base;
+        }
+
+        // Agregar traslado para actividades presenciales
+        if (mod_id) {
+          const modalidadQuery = await executeQuery(`
+            SELECT val_hor_clasificacion
+            FROM valor_horas vh
+            JOIN modalidades m ON vh.mod_id = m.mod_id
+            WHERE m.mod_id = ?
+          `, [mod_id]);
+
+          if (modalidadQuery.success && modalidadQuery.data.length > 0) {
+            const clasificacion = modalidadQuery.data[0].val_hor_clasificacion;
+            if (clasificacion && clasificacion.toLowerCase().includes('presencial')) {
+              valorHora += valores.val_reg_traslado;
+            }
+          }
+        }
+      }
+    } else {
+      // Si no hay región específica, usar valor_horas general
+      const rutaQuery = await executeQuery(`
+        SELECT vh.val_hor_precio, vh.val_hor_clasificacion
+        FROM valor_horas vh
+        JOIN rutas r ON vh.val_hor_id = r.val_hor_id
+        JOIN programa_ruta pr ON pr.rut_id = r.rut_id
+        WHERE pr.pr_id = ?
+      `, [pr_id]);
+
+      if (rutaQuery.success && rutaQuery.data.length > 0) {
+        valorHora = rutaQuery.data[0].val_hor_precio;
+      } else {
+        // Valor por defecto si no se encuentra información
+        valorHora = 85000;
+      }
+    }
+
+    // Calcular valores totales
+    const valorTotalPagar = horasPagar * valorHora;
+    const valorTotalCobrar = horasCobrar * valorHora * 2; // CCB cobra el doble
+
+    console.log(`💰 Cálculo de valores para ruta ${pr_id}:`, {
+      pr_id,
+      val_reg_id,
+      mod_id,
+      horas_dictar,
+      valorHora,
+      horasPagar,
+      horasCobrar,
+      valorTotalPagar,
+      valorTotalCobrar
+    });
+
+    res.json({
+      success: true,
+      data: {
+        valorHora,
+        horasPagar,
+        horasCobrar,
+        valorTotalPagar,
+        valorTotalCobrar
+      }
+    });
+
+  } catch (error) {
+    console.error('Error al calcular valores:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error interno del servidor',
+      error: 'INTERNAL_ERROR'
+    });
+  }
+});
+
 // POST /api/programaciones/grupal - Crear programación grupal
 router.post('/grupal', [
   body('pr_id').isInt().withMessage('ID programa-ruta requerido'),
@@ -807,6 +926,341 @@ router.get('/dashboard-stats', authenticateToken, async (req, res) => {
 
   } catch (error) {
     console.error('Error al obtener estadísticas del dashboard:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error interno del servidor',
+      error: 'INTERNAL_ERROR'
+    });
+  }
+});
+
+// DELETE /api/programaciones/:id - Eliminar programación
+router.delete('/:id', authenticateToken, requireGestora, async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Determinar el tipo y ID real desde el ID compuesto (ej: "grupal_123" o "individual_456")
+    let tipo, realId;
+    
+    if (id.startsWith('grupal_')) {
+      tipo = 'grupal';
+      realId = id.replace('grupal_', '');
+    } else if (id.startsWith('individual_')) {
+      tipo = 'individual';
+      realId = id.replace('individual_', '');
+    } else {
+      return res.status(400).json({
+        success: false,
+        message: 'ID de programación inválido. Debe empezar con "grupal_" o "individual_"'
+      });
+    }
+
+    let deleteResult;
+    
+    if (tipo === 'grupal') {
+      // Verificar que la programación grupal existe
+      const existsResult = await executeQuery(
+        'SELECT pro_id FROM programaciones_grupales WHERE pro_id = ?',
+        [realId]
+      );
+      
+      if (!existsResult.success || existsResult.data.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: 'Programación grupal no encontrada'
+        });
+      }
+      
+      // Eliminar programación grupal
+      deleteResult = await executeQuery(
+        'DELETE FROM programaciones_grupales WHERE pro_id = ?',
+        [realId]
+      );
+      
+    } else if (tipo === 'individual') {
+      // Verificar que la programación individual existe
+      const existsResult = await executeQuery(
+        'SELECT proin_id FROM programaciones_individuales WHERE proin_id = ?',
+        [realId]
+      );
+      
+      if (!existsResult.success || existsResult.data.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: 'Programación individual no encontrada'
+        });
+      }
+      
+      // Eliminar programación individual
+      deleteResult = await executeQuery(
+        'DELETE FROM programaciones_individuales WHERE proin_id = ?',
+        [realId]
+      );
+    }
+
+    if (!deleteResult.success) {
+      return res.status(500).json({
+        success: false,
+        message: 'Error al eliminar la programación',
+        error: 'DATABASE_ERROR'
+      });
+    }
+
+    console.log(`🗑️ Programación ${tipo} eliminada:`, { id, realId });
+
+    res.json({
+      success: true,
+      message: `Programación ${tipo} eliminada exitosamente`,
+      data: { id, tipo, realId }
+    });
+
+  } catch (error) {
+    console.error('Error al eliminar programación:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error interno del servidor',
+      error: 'INTERNAL_ERROR'
+    });
+  }
+});
+
+// GET /api/programaciones/:id - Obtener una programación específica para edición
+router.get('/:id', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Determinar el tipo y ID real desde el ID compuesto
+    let tipo, realId;
+    
+    if (id.startsWith('grupal_')) {
+      tipo = 'grupal';
+      realId = id.replace('grupal_', '');
+    } else if (id.startsWith('individual_')) {
+      tipo = 'individual';
+      realId = id.replace('individual_', '');
+    } else {
+      return res.status(400).json({
+        success: false,
+        message: 'ID de programación inválido'
+      });
+    }
+
+    let result;
+    
+    if (tipo === 'grupal') {
+      result = await executeQuery(`
+        SELECT 
+          pg.*,
+          m.mod_nombre,
+          ui.usu_primer_nombre,
+          ui.usu_segundo_nombre,
+          ui.usu_primer_apellido,
+          ui.usu_segundo_apellido,
+          ac.are_descripcion,
+          p.prog_id,
+          p.prog_nombre,
+          r.rut_id,
+          r.rut_nombre,
+          act.act_id,
+          act.act_tipo
+        FROM programaciones_grupales pg
+        JOIN usuarios_info ui ON pg.usu_cedula = ui.usu_cedula
+        LEFT JOIN areas_conocimiento ac ON ui.are_id = ac.are_id
+        JOIN modalidades m ON pg.mod_id = m.mod_id
+        JOIN programa_ruta pr ON pg.pr_id = pr.pr_id
+        JOIN programas p ON pr.prog_id = p.prog_id
+        JOIN rutas r ON pr.rut_id = r.rut_id
+        JOIN actividades act ON pg.act_id = act.act_id
+        WHERE pg.pro_id = ?
+      `, [realId]);
+      
+    } else if (tipo === 'individual') {
+      result = await executeQuery(`
+        SELECT 
+          pi.*,
+          m.mod_nombre,
+          ui.usu_primer_nombre,
+          ui.usu_segundo_nombre,
+          ui.usu_primer_apellido,
+          ui.usu_segundo_apellido,
+          ac.are_descripcion,
+          p.prog_id,
+          p.prog_nombre,
+          r.rut_id,
+          r.rut_nombre,
+          act.act_id,
+          act.act_tipo
+        FROM programaciones_individuales pi
+        JOIN usuarios_info ui ON pi.usu_cedula = ui.usu_cedula
+        LEFT JOIN areas_conocimiento ac ON ui.are_id = ac.are_id
+        JOIN modalidades m ON pi.mod_id = m.mod_id
+        JOIN programa_ruta pr ON pi.pr_id = pr.pr_id
+        JOIN programas p ON pr.prog_id = p.prog_id
+        JOIN rutas r ON pr.rut_id = r.rut_id
+        JOIN actividades act ON pi.act_id = act.act_id
+        WHERE pi.proin_id = ?
+      `, [realId]);
+    }
+
+    if (!result.success || result.data.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Programación no encontrada'
+      });
+    }
+
+    const programacion = result.data[0];
+    
+    res.json({
+      success: true,
+      data: {
+        programacion,
+        tipo
+      }
+    });
+
+  } catch (error) {
+    console.error('Error al obtener programación:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error interno del servidor',
+      error: 'INTERNAL_ERROR'
+    });
+  }
+});
+
+// PUT /api/programaciones/:id - Actualizar programación
+router.put('/:id', authenticateToken, requireGestora, async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Determinar el tipo y ID real desde el ID compuesto
+    let tipo, realId;
+    
+    if (id.startsWith('grupal_')) {
+      tipo = 'grupal';
+      realId = id.replace('grupal_', '');
+    } else if (id.startsWith('individual_')) {
+      tipo = 'individual';
+      realId = id.replace('individual_', '');
+    } else {
+      return res.status(400).json({
+        success: false,
+        message: 'ID de programación inválido. Debe empezar con "grupal_" o "individual_"'
+      });
+    }
+
+    let updateResult;
+    
+    if (tipo === 'grupal') {
+      // Verificar que la programación grupal existe
+      const existsResult = await executeQuery(
+        'SELECT pro_id FROM programaciones_grupales WHERE pro_id = ?',
+        [realId]
+      );
+      
+      if (!existsResult.success || existsResult.data.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: 'Programación grupal no encontrada'
+        });
+      }
+      
+      // Actualizar programación grupal
+      const {
+        pr_id, act_id, mod_id, oamp, val_reg_id, pro_codigo_agenda, pro_mes,
+        pro_fecha_formacion, pro_hora_inicio, pro_hora_fin, pro_horas_dictar,
+        pro_coordinador_ccb, pro_direccion, pro_enlace, pro_numero_hora_pagar,
+        pro_numero_hora_cobrar, pro_valor_hora, pro_valor_total_hora_pagar,
+        pro_valor_total_hora_ccb, pro_entregables, pro_dependencia, 
+        pro_observaciones, pro_tematica
+      } = req.body;
+      
+      updateResult = await executeQuery(`
+        UPDATE programaciones_grupales SET
+          pr_id = ?, act_id = ?, mod_id = ?, oamp = ?, val_reg_id = ?,
+          pro_codigo_agenda = ?, pro_mes = ?, pro_fecha_formacion = ?,
+          pro_hora_inicio = ?, pro_hora_fin = ?, pro_horas_dictar = ?,
+          pro_coordinador_ccb = ?, pro_direccion = ?, pro_enlace = ?,
+          pro_numero_hora_pagar = ?, pro_numero_hora_cobrar = ?, pro_valor_hora = ?,
+          pro_valor_total_hora_pagar = ?, pro_valor_total_hora_ccb = ?,
+          pro_entregables = ?, pro_dependencia = ?, pro_observaciones = ?,
+          pro_tematica = ?
+        WHERE pro_id = ?
+      `, [
+        pr_id, act_id, mod_id, oamp, val_reg_id, pro_codigo_agenda, pro_mes,
+        pro_fecha_formacion, pro_hora_inicio, pro_hora_fin, pro_horas_dictar,
+        pro_coordinador_ccb, pro_direccion, pro_enlace, pro_numero_hora_pagar,
+        pro_numero_hora_cobrar, pro_valor_hora, pro_valor_total_hora_pagar,
+        pro_valor_total_hora_ccb, pro_entregables, pro_dependencia, 
+        pro_observaciones, pro_tematica, realId
+      ]);
+      
+    } else if (tipo === 'individual') {
+      // Verificar que la programación individual existe
+      const existsResult = await executeQuery(
+        'SELECT proin_id FROM programaciones_individuales WHERE proin_id = ?',
+        [realId]
+      );
+      
+      if (!existsResult.success || existsResult.data.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: 'Programación individual no encontrada'
+        });
+      }
+      
+      // Actualizar programación individual
+      const {
+        pr_id, act_id, mod_id, oamp, val_reg_id, proin_codigo_agenda, proin_mes,
+        proin_fecha_formacion, proin_hora_inicio, proin_hora_fin, proin_horas_dictar,
+        proin_coordinador_ccb, proin_direccion, proin_enlace, proin_numero_hora_pagar,
+        proin_numero_hora_cobrar, proin_valor_hora, proin_valor_total_hora_pagar,
+        proin_valor_total_hora_ccb, proin_entregables, proin_dependencia, 
+        proin_observaciones, proin_tematica, proin_nombre_empresario, 
+        proin_identificacion_empresario
+      } = req.body;
+      
+      updateResult = await executeQuery(`
+        UPDATE programaciones_individuales SET
+          pr_id = ?, act_id = ?, mod_id = ?, oamp = ?, val_reg_id = ?,
+          proin_codigo_agenda = ?, proin_mes = ?, proin_fecha_formacion = ?,
+          proin_hora_inicio = ?, proin_hora_fin = ?, proin_horas_dictar = ?,
+          proin_coordinador_ccb = ?, proin_direccion = ?, proin_enlace = ?,
+          proin_numero_hora_pagar = ?, proin_numero_hora_cobrar = ?, proin_valor_hora = ?,
+          proin_valor_total_hora_pagar = ?, proin_valor_total_hora_ccb = ?,
+          proin_entregables = ?, proin_dependencia = ?, proin_observaciones = ?,
+          proin_tematica = ?, proin_nombre_empresario = ?, proin_identificacion_empresario = ?
+        WHERE proin_id = ?
+      `, [
+        pr_id, act_id, mod_id, oamp, val_reg_id, proin_codigo_agenda, proin_mes,
+        proin_fecha_formacion, proin_hora_inicio, proin_hora_fin, proin_horas_dictar,
+        proin_coordinador_ccb, proin_direccion, proin_enlace, proin_numero_hora_pagar,
+        proin_numero_hora_cobrar, proin_valor_hora, proin_valor_total_hora_pagar,
+        proin_valor_total_hora_ccb, proin_entregables, proin_dependencia, 
+        proin_observaciones, proin_tematica, proin_nombre_empresario, 
+        proin_identificacion_empresario, realId
+      ]);
+    }
+
+    if (!updateResult.success) {
+      return res.status(500).json({
+        success: false,
+        message: 'Error al actualizar la programación',
+        error: 'DATABASE_ERROR'
+      });
+    }
+
+    console.log(`✅ Programación ${tipo} actualizada:`, { id, realId });
+
+    res.json({
+      success: true,
+      message: `Programación ${tipo} actualizada exitosamente`,
+      data: { id, tipo, realId }
+    });
+
+  } catch (error) {
+    console.error('Error al actualizar programación:', error);
     res.status(500).json({
       success: false,
       message: 'Error interno del servidor',

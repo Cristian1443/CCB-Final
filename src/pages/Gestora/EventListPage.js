@@ -1,217 +1,406 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom'; // Importa useNavigate
-import DashboardLayout from '../../components/DashboardLayout'; // Asegúrate de que esta ruta sea correcta
-import EventItem from '../../components/EventItem'; // Asegúrate de que esta ruta sea correcta
-import './EventListPage.css'; // Asegúrate de que esta importación exista
-// Importa iconos si los usas, por ejemplo:
-import { FaPlus, FaArrowLeft } from 'react-icons/fa'; // Importa los iconos necesarios
+import { useNavigate } from 'react-router-dom';
+import DashboardLayout from '../../components/DashboardLayout';
+import EventItem from '../../components/EventItem';
+import './EventListPage.css';
+import { FaPlus, FaArrowLeft, FaSync, FaFilter } from 'react-icons/fa';
+import apiService from '../../utils/api';
 
 function EventListPage() {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  
   // Estados para filtros y búsqueda
   const [searchTerm, setSearchTerm] = useState('');
   const [filterModality, setFilterModality] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterDate, setFilterDate] = useState('');
   const [filterTime, setFilterTime] = useState('');
+  const [filterType, setFilterType] = useState('all'); // grupal/individual
+  const [filterProgram, setFilterProgram] = useState('all');
+  
+  // Estados para datos de referencia
+  const [modalidades, setModalidades] = useState([]);
+  const [programas, setProgramas] = useState([]);
+  
+  // Estados para estadísticas
+  const [stats, setStats] = useState({
+    total: 0,
+    grupales: 0,
+    individuales: 0
+  });
 
-  // Obtiene la función de navegación
-  const navigate = useNavigate(); // <-- Inicializa useNavigate
+  const navigate = useNavigate();
 
+  // Detectar cambios en el tamaño de la pantalla
   useEffect(() => {
-  const loadEvents = () => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Cargar datos iniciales
+  useEffect(() => {
+    loadAllData();
+  }, []);
+
+  // Función para cargar todos los datos
+  const loadAllData = async () => {
     try {
       setLoading(true);
-      const storedEvents = JSON.parse(localStorage.getItem('eventos')) || [];
-if (storedEvents.length === 0) {
-  const defaultEvents = [
-    {
-      id: 1,
-      title: 'Clase de React Básico',
-      date: '2025-05-20',
-      time: '10:00',
-      instructor: 'Juan Pérez',
-      location: 'Aula 1',
-      modality: 'Presencial',
-      status: 'Programado',
-    },
-    {
-      id: 2,
-      title: 'Taller de CSS Grid',
-      date: '2025-05-22',
-      time: '14:00',
-      instructor: 'Laura Gómez',
-      location: 'Online',
-      modality: 'Virtual',
-      status: 'Programado',
-    },
-  ];
-  localStorage.setItem('eventos', JSON.stringify(defaultEvents)); // <-- CLAVE CORREGIDA
-  setEvents(defaultEvents);
-} else {
-  setEvents(storedEvents);
-}
+      setError(null);
 
+      // Cargar programaciones y datos de referencia en paralelo
+      const [
+        programacionesRes,
+        modalidadesRes,
+        programasRes
+      ] = await Promise.all([
+        apiService.getProgramaciones(),
+        apiService.getModalidades(),
+        apiService.getProgramaRutas()
+      ]);
 
-      setLoading(false);
-    } catch (err) {
-      setError('Error al cargar los eventos.');
+      if (programacionesRes.success) {
+        const programaciones = programacionesRes.data.programaciones;
+        
+        // Transformar datos para que coincidan con el formato esperado por EventItem
+        const eventosTransformados = programaciones.map(prog => ({
+          id: prog.id,
+          title: prog.title,
+          location: prog.location,
+          date: prog.date,
+          time: prog.time,
+          endTime: prog.end_time,
+          program: prog.program_name,
+          specialty: prog.area_conocimiento,
+          modality: prog.modality,
+          status: prog.status || 'Programado',
+          instructor: prog.instructor,
+          participants: prog.participants,
+          type: prog.type,
+          hours: prog.hours,
+          coordinator: prog.coordinator,
+          link: prog.link,
+          contract: prog.contract,
+          total_value: prog.total_value,
+          program_name: prog.program_name,
+          route_name: prog.route_name,
+          activity_type: prog.activity_type,
+          area_conocimiento: prog.area_conocimiento
+        }));
+
+        // Ordenar por fecha (más recientes primero)
+        const eventosOrdenados = eventosTransformados.sort((a, b) => {
+          const dateA = new Date(`${a.date}T${a.time}`);
+          const dateB = new Date(`${b.date}T${b.time}`);
+          return dateB - dateA;
+        });
+
+        setEvents(eventosOrdenados);
+
+        // Calcular estadísticas
+        const statsData = {
+          total: eventosOrdenados.length,
+          grupales: eventosOrdenados.filter(e => e.type === 'grupal').length,
+          individuales: eventosOrdenados.filter(e => e.type === 'individual').length
+        };
+        setStats(statsData);
+
+        console.log('✅ Programaciones cargadas:', eventosOrdenados.length);
+      } else {
+        throw new Error(programacionesRes.message || 'Error al cargar programaciones');
+      }
+
+      // Cargar datos de referencia para filtros
+      if (modalidadesRes.success) {
+        setModalidades(modalidadesRes.data.modalidades);
+      }
+
+      if (programasRes.success) {
+        setProgramas(programasRes.data.programas);
+      }
+
+    } catch (error) {
+      console.error('❌ Error cargando datos:', error);
+      setError(`Error al cargar los datos: ${error.message}`);
+    } finally {
       setLoading(false);
     }
   };
-
-  loadEvents();
-}, []);
-
 
   // Función para manejar la eliminación de un evento
-  const handleDelete = (id) => {
-  if (window.confirm('¿Estás seguro de que quieres eliminar este evento?')) {
-    try {
-      const updatedEvents = events.filter(event => event.id !== id);
-      setEvents(updatedEvents);
-      localStorage.setItem('events', JSON.stringify(updatedEvents));
-      alert('Evento eliminado con éxito.');
-    } catch (err) {
-      setError('Error al eliminar el evento.');
-      console.error(err);
+  const handleDelete = async (id) => {
+    console.log('🗑️ Intentando eliminar programación:', id);
+    
+    if (window.confirm('¿Estás seguro de que deseas eliminar esta programación? Esta acción no se puede deshacer.')) {
+      try {
+        setLoading(true);
+        
+        // Llamar a la API para eliminar
+        const result = await apiService.deleteProgramacion(id);
+        
+        if (result.success) {
+          // Actualizar la lista local
+          const updatedEvents = events.filter(event => event.id !== id);
+          setEvents(updatedEvents);
+          
+          // Actualizar estadísticas
+          const newStats = {
+            total: updatedEvents.length,
+            grupales: updatedEvents.filter(e => e.type === 'grupal').length,
+            individuales: updatedEvents.filter(e => e.type === 'individual').length
+          };
+          setStats(newStats);
+          
+          console.log('✅ Programación eliminada exitosamente:', id);
+          
+          const tipoPrograma = id.startsWith('grupal_') ? 'grupal' : 'individual';
+          alert(`✅ Programación ${tipoPrograma} eliminada exitosamente.`);
+          
+        } else {
+          throw new Error(result.message || 'Error al eliminar la programación');
+        }
+        
+      } catch (error) {
+        console.error('❌ Error eliminando programación:', error);
+        alert(`❌ Error al eliminar la programación: ${error.message}`);
+      } finally {
+        setLoading(false);
+      }
     }
-  }
-};
-
-
-  // Función para manejar la edición de un evento (redirigir a la página de edición)
-  const handleEdit = (id) => {
-    console.log('Navegando a editar evento con ID:', id);
-    // Navega a la ruta de edición, pasando el ID del evento
-    // ASEGÚRATE DE QUE LA RUTA '/gestora/eventos/editar/:id' ESTÁ CONFIGURADA EN TU App.js
-    navigate(`/gestora/eventos/editar/${id}`);
   };
 
-  // ** Funciones para manejar la navegación de los botones principales con rutas específicas corregidas **
+  // Función para manejar la edición de un evento
+  const handleEdit = async (id) => {
+    try {
+      console.log('✏️ Intentando editar programación:', id);
+      
+      // Obtener datos de la programación para editar
+      const result = await apiService.getProgramacion(id);
+      
+      if (result.success) {
+        const { programacion, tipo } = result.data;
+        console.log('📋 Datos de programación obtenidos:', programacion);
+        
+        // Guardar datos en localStorage para que los tome NuevaProgramacionPage
+        localStorage.setItem('programacionEditar', JSON.stringify({
+          id,
+          tipo,
+          data: programacion
+        }));
+        
+        // Navegar a la página de edición
+        navigate('/gestora/nueva-programacion?mode=edit');
+        
+      } else {
+        throw new Error(result.message || 'Error al obtener los datos de la programación');
+      }
+      
+    } catch (error) {
+      console.error('❌ Error obteniendo datos para editar:', error);
+      alert(`❌ Error al cargar la programación para editar: ${error.message}`);
+    }
+  };
+
+  // Función para navegar a nueva programación
   const handleAddEvent = () => {
     console.log('Navegando a la página para agregar nueva programación');
-    // Navega a la ruta para crear un nuevo evento - RUTA CORREGIDA SEGÚN App.js
     navigate('/gestora/nueva-programacion');
   };
 
+  // Función para volver al dashboard
   const handleGoToDashboard = () => {
     console.log('Navegando de vuelta al dashboard');
-    // Navega a la ruta del dashboard principal - RUTA CORREGIDA SEGÚN App.js
     navigate('/gestora');
   };
-  // ** Fin de funciones de navegación **
 
+  // Función para limpiar filtros
+  const clearFilters = () => {
+    setSearchTerm('');
+    setFilterModality('all');
+    setFilterStatus('all');
+    setFilterDate('');
+    setFilterTime('');
+    setFilterType('all');
+    setFilterProgram('all');
+  };
 
   // Filtrar eventos basado en los estados de filtro
   const filteredEvents = events.filter(event => {
     const matchesSearch = event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           event.instructor.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           event.location.toLowerCase().includes(searchTerm.toLowerCase());
+                         event.instructor.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         event.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         event.program_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         event.route_name?.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesModality = filterModality === 'all' || event.modality === filterModality;
     const matchesStatus = filterStatus === 'all' || event.status === filterStatus;
+    const matchesType = filterType === 'all' || event.type === filterType;
+    const matchesProgram = filterProgram === 'all' || event.program_name === filterProgram;
 
-    // Logic to match date filter
+    // Filtro de fecha
     const matchesDate = filterDate === '' || event.date === filterDate;
 
-    // Logic to match time filter
-    const matchesTime = filterTime === '' || event.time === filterTime;
+    // Filtro de hora (buscar eventos que inicien en esa hora)
+    const matchesTime = filterTime === '' || event.time.startsWith(filterTime.slice(0, 2));
 
-
-    // Combine all filters
-    return matchesSearch && matchesModality && matchesStatus && matchesDate && matchesTime;
+    return matchesSearch && matchesModality && matchesStatus && matchesType && 
+           matchesProgram && matchesDate && matchesTime;
   });
 
   if (loading) {
     return (
-      <DashboardLayout> {/* Envuelve el mensaje de carga también */}
-        <div className="event-list-container">Cargando eventos...</div>
+      <DashboardLayout>
+        <div className="event-list-container">
+          <div className="loading-state">
+            <div className="loading-spinner"></div>
+            <p>Cargando programaciones...</p>
+          </div>
+        </div>
       </DashboardLayout>
     );
   }
 
   if (error) {
     return (
-      <DashboardLayout> {/* Envuelve el mensaje de error también */}
-        <div className="event-list-container error-message">{error}</div>
+      <DashboardLayout>
+        <div className="event-list-container">
+          <div className="error-message">
+            <p>{error}</p>
+            <button onClick={loadAllData} className="btn-add-programacion">
+              <FaSync /> Reintentar
+            </button>
+          </div>
+        </div>
       </DashboardLayout>
     );
   }
 
   return (
-    // ENVUELVE TODO EL CONTENIDO CON DashboardLayout
     <DashboardLayout>
-      {/* El contenido de la lista de eventos va AQUÍ DENTRO */}
       <div className="event-list-container">
         <div className="list-header">
-          <h2>Lista de Eventos</h2>
-          {/* Botones de acción en la parte superior */}
+          <div className="header-title">
+            <h2>Lista de Programaciones</h2>
+            <div className="stats-summary">
+              <span className="stat-item">Total: {stats.total}</span>
+              <span className="stat-item">Grupales: {stats.grupales}</span>
+              <span className="stat-item">Individuales: {stats.individuales}</span>
+            </div>
+          </div>
+          
           <div className="header-actions">
-            {/* Botón de "Agregar Programación" */}
             <button
-                className="btn-add-programacion" // Clase CSS para el estilo premium
-                onClick={handleAddEvent} // Llama a la función de navegación con la ruta correcta
+              className="btn-add-programacion"
+              onClick={handleAddEvent}
             >
-                <FaPlus /> Agregar Programación
+              <FaPlus /> {isMobile ? 'Nueva' : 'Agregar Programación'}
             </button>
-            {/* Botón de "Volver al Dashboard" */}
             <button
-                className="btn-go-to-dashboard" // Clase CSS para el estilo premium
-                onClick={handleGoToDashboard} // Llama a la función de navegación con la ruta correcta
+              className="btn-go-to-dashboard"
+              onClick={handleGoToDashboard}
             >
-                <FaArrowLeft /> Volver al Dashboard
+              <FaArrowLeft /> {isMobile ? 'Dashboard' : 'Volver al Dashboard'}
+            </button>
+            <button
+              className="btn-reload"
+              onClick={loadAllData}
+              disabled={loading}
+            >
+              <FaSync /> {isMobile ? 'Recargar' : 'Recargar Datos'}
             </button>
           </div>
         </div>
 
-        {/* Sección de filtros */}
+        {/* Sección de filtros mejorada */}
         <div className="filter-section">
-          <input
-            type="text"
-            placeholder="Buscar (Título, Lugar, Instructor)..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="filter-input"
-          />
-          <select
-            value={filterModality}
-            onChange={(e) => setFilterModality(e.target.value)}
-            className="filter-select"
-          >
-            <option value="all">Todas las Modalidades</option>
-            <option value="Presencial">Presencial</option>
-            <option value="Virtual">Virtual</option>
-            <option value="Hibrida">Híbrida</option>
-          </select>
-          <select
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-            className="filter-select"
-          >
-            <option value="all">Todos los Estados</option>
-            <option value="Programado">Programado</option>
-            <option value="Completado">Completado</option>
-            <option value="Cancelado">Cancelado</option>
-            {/* Agrega otros estados si los tienes */}
-          </select>
-            {/* Filter fields for date and time */}
+          <div className="filter-header">
+            <h3><FaFilter /> Filtros</h3>
+            <button onClick={clearFilters} className="clear-filters-btn">
+              Limpiar Filtros
+            </button>
+          </div>
+          
+          <div className="filter-grid">
+            <input
+              type="text"
+              placeholder="Buscar (Título, Lugar, Instructor, Programa)..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="filter-input"
+            />
+            
+            <select
+              value={filterType}
+              onChange={(e) => setFilterType(e.target.value)}
+              className="filter-select"
+            >
+              <option value="all">Todos los Tipos</option>
+              <option value="grupal">Programaciones Grupales</option>
+              <option value="individual">Asesorías Individuales</option>
+            </select>
+            
+            <select
+              value={filterModality}
+              onChange={(e) => setFilterModality(e.target.value)}
+              className="filter-select"
+            >
+              <option value="all">Todas las Modalidades</option>
+              {modalidades.map((modalidad) => (
+                <option key={modalidad.mod_id} value={modalidad.mod_nombre}>
+                  {modalidad.mod_nombre}
+                </option>
+              ))}
+            </select>
+            
+            <select
+              value={filterProgram}
+              onChange={(e) => setFilterProgram(e.target.value)}
+              className="filter-select"
+            >
+              <option value="all">Todos los Programas</option>
+              {programas.map((programa) => (
+                <option key={programa.prog_id} value={programa.prog_nombre}>
+                  {programa.prog_nombre}
+                </option>
+              ))}
+            </select>
+            
+            <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              className="filter-select"
+            >
+              <option value="all">Todos los Estados</option>
+              <option value="Programado">Programado</option>
+              <option value="En Progreso">En Progreso</option>
+              <option value="Completado">Completado</option>
+              <option value="Cancelado">Cancelado</option>
+            </select>
+            
             <input
               type="date"
               value={filterDate}
               onChange={(e) => setFilterDate(e.target.value)}
               className="filter-input"
+              placeholder="Filtrar por fecha"
             />
+            
             <input
               type="time"
               value={filterTime}
               onChange={(e) => setFilterTime(e.target.value)}
               className="filter-input"
+              placeholder="Filtrar por hora"
             />
+          </div>
         </div>
-
 
         {/* Lista de EventItems */}
         <div className="event-items-list">
@@ -220,24 +409,40 @@ if (storedEvents.length === 0) {
               <EventItem
                 key={event.id}
                 event={event}
-                onEdit={handleEdit} // <-- Pasa la función handleEdit aquí
+                onEdit={handleEdit}
                 onDelete={handleDelete}
+                isMobile={isMobile}
               />
             ))
           ) : (
-            <p className="no-events-message">
-                {searchTerm || filterModality !== 'all' || filterStatus !== 'all' || filterDate || filterTime
-                    ? 'No se encontraron eventos que coincidan con los criterios de filtro.'
-                    : 'No hay eventos para mostrar.'
-                }
-            </p>
+            <div className="no-events-message">
+              {searchTerm || filterModality !== 'all' || filterStatus !== 'all' || 
+               filterDate || filterTime || filterType !== 'all' || filterProgram !== 'all' ? (
+                <>
+                  <p>No se encontraron programaciones que coincidan con los criterios de filtro.</p>
+                  <button onClick={clearFilters} className="clear-filters-btn">
+                    Limpiar Filtros
+                  </button>
+                </>
+              ) : (
+                <>
+                  <p>No hay programaciones para mostrar.</p>
+                  <button onClick={handleAddEvent} className="btn-add-programacion">
+                    <FaPlus /> Crear Primera Programación
+                  </button>
+                </>
+              )}
+            </div>
           )}
         </div>
 
-        {/* Aquí podrías añadir paginación si es necesario */}
-        {/* <div className="pagination">...</div> */}
+        {/* Información adicional */}
+        {filteredEvents.length > 0 && (
+          <div className="results-info">
+            <p>Mostrando {filteredEvents.length} de {events.length} programaciones</p>
+          </div>
+        )}
       </div>
-      {/* FIN del contenido de la lista de eventos */}
     </DashboardLayout>
   );
 }

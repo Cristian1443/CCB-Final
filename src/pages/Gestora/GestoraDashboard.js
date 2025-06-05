@@ -351,31 +351,96 @@ function GestoraDashboard() {
         cargarDatosDesdeAPI();
     }, [isMobile]);
 
-    // Función para eliminar evento (necesita implementación de API)
+    // Función para eliminar evento
     const handleDeleteUpcomingEvent = async (id) => {
-        if (window.confirm('¿Estás seguro de que deseas eliminar esta programación?')) {
+        console.log('🗑️ Intentando eliminar programación:', id);
+        
+        if (window.confirm('¿Estás seguro de que deseas eliminar esta programación? Esta acción no se puede deshacer.')) {
             try {
-                // Por ahora, solo actualización local hasta implementar DELETE en API
-                const updatedEvents = upcomingEvents.filter(event => event.id !== id);
-                setUpcomingEvents(updatedEvents);
-                setScheduledEventsCount(updatedEvents.length);
+                setLoading(true);
                 
-                // TODO: Implementar apiService.deleteProgramacion(id)
-                console.log('🗑️ Programación eliminada localmente:', id);
-                alert('Programación eliminada de la vista. \n(Nota: Eliminar de la base de datos requiere implementación adicional)');
+                // Llamar a la API para eliminar
+                const result = await apiService.deleteProgramacion(id);
+                
+                if (result.success) {
+                    // Actualizar la lista local
+                    const updatedEvents = upcomingEvents.filter(event => event.id !== id);
+                    setUpcomingEvents(updatedEvents);
+                    setScheduledEventsCount(updatedEvents.length);
+                    
+                    // Recalcular próximo evento si es necesario
+                    if (nextEvent && upcomingEvents.find(e => e.id === id)?.title === nextEvent.title) {
+                        const newNextEvent = getNextEvent(updatedEvents);
+                        if (newNextEvent && newNextEvent.dateTime) {
+                            const opcionesFecha = { 
+                                day: 'numeric', 
+                                month: 'short',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                            };
+                            const fechaFormateada = newNextEvent.dateTime.toLocaleDateString('es-ES', opcionesFecha);
+                            setNextEvent({
+                                title: isMobile && newNextEvent.title.length > 20 
+                                    ? newNextEvent.title.substring(0, 20) + '...' 
+                                    : newNextEvent.title,
+                                date: fechaFormateada,
+                                location: newNextEvent.location,
+                                modality: newNextEvent.modality
+                            });
+                        } else {
+                            setNextEvent({ title: "Sin eventos futuros", date: "", location: "", modality: "" });
+                        }
+                    }
+                    
+                    console.log('✅ Programación eliminada exitosamente:', id);
+                    
+                    // Opcional: mostrar mensaje de éxito más elegante
+                    const tipoPrograma = id.startsWith('grupal_') ? 'grupal' : 'individual';
+                    alert(`✅ Programación ${tipoPrograma} eliminada exitosamente.`);
+                    
+                } else {
+                    throw new Error(result.message || 'Error al eliminar la programación');
+                }
+                
             } catch (error) {
-                console.error('Error eliminando programación:', error);
-                alert('Error al eliminar la programación');
+                console.error('❌ Error eliminando programación:', error);
+                alert(`❌ Error al eliminar la programación: ${error.message}`);
+            } finally {
+                setLoading(false);
             }
         }
     };
 
-    // Función para editar evento (navegar a página de edición)
-    const handleEditUpcomingEvent = (id) => {
-        // TODO: Crear página de edición de programaciones
-        console.log('✏️ Editar programación:', id);
-        alert(`Editar programación ${id}\n(Página de edición en desarrollo)`);
-        // navigate(`/gestora/programacion/editar/${id}`);
+    // Función para editar evento
+    const handleEditUpcomingEvent = async (id) => {
+        try {
+            console.log('✏️ Intentando editar programación:', id);
+            
+            // Obtener datos de la programación para editar
+            const result = await apiService.getProgramacion(id);
+            
+            if (result.success) {
+                const { programacion, tipo } = result.data;
+                console.log('📋 Datos de programación obtenidos:', programacion);
+                
+                // Guardar datos en localStorage para que los tome NuevaProgramacionPage
+                localStorage.setItem('programacionEditar', JSON.stringify({
+                    id,
+                    tipo,
+                    data: programacion
+                }));
+                
+                // Navegar a la página de edición
+                navigate('/gestora/nueva-programacion?mode=edit');
+                
+            } else {
+                throw new Error(result.message || 'Error al obtener los datos de la programación');
+            }
+            
+        } catch (error) {
+            console.error('❌ Error obteniendo datos para editar:', error);
+            alert(`❌ Error al cargar la programación para editar: ${error.message}`);
+        }
     };
 
     const handleNewEventClick = () => {
@@ -383,10 +448,8 @@ function GestoraDashboard() {
     };
 
     const handleViewAllEventsClick = () => {
-        // TODO: Crear página de lista completa de programaciones
-        console.log('📋 Ver todas las programaciones');
-        alert('Página de listado completo en desarrollo');
-        // navigate('/gestora/programaciones');
+        console.log('📋 Navegando a la lista completa de programaciones');
+        navigate('/gestora/eventos');
     };
 
     const renderSummaryCard = (icon, title, value) => (

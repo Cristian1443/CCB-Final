@@ -12,6 +12,12 @@ function NuevaProgramacionPage() {
   const navigate = useNavigate();
   
   // =========================================================================
+  // Estados para modo edición
+  // =========================================================================
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editData, setEditData] = useState(null);
+  
+  // =========================================================================
   // Estados para datos de la base de datos
   // =========================================================================
   const [actividades, setActividades] = useState([]);
@@ -129,6 +135,197 @@ function NuevaProgramacionPage() {
   }, [regionSeleccionada]);
 
   // =========================================================================
+  // Efectos para modo edición
+  // =========================================================================
+  useEffect(() => {
+    // Detectar si estamos en modo edición
+    const urlParams = new URLSearchParams(window.location.search);
+    const mode = urlParams.get('mode');
+    
+    if (mode === 'edit') {
+      setIsEditMode(true);
+      
+      // Cargar datos de edición desde localStorage
+      const editDataString = localStorage.getItem('programacionEditar');
+      if (editDataString) {
+        try {
+          const editInfo = JSON.parse(editDataString);
+          setEditData(editInfo);
+          console.log('📝 Modo edición activado:', editInfo);
+          
+        } catch (error) {
+          console.error('Error parsing edit data:', error);
+          setError('Error al cargar los datos para edición');
+        }
+      } else {
+        console.warn('No se encontraron datos de edición en localStorage');
+        setError('No se encontraron datos para editar');
+      }
+    }
+  }, []);
+
+  // Efecto separado para poblar el formulario cuando ya tenemos todos los datos
+  useEffect(() => {
+    if (isEditMode && editData && !loading && programas.length > 0 && actividades.length > 0 && modalidades.length > 0 && contratos.length > 0) {
+      console.log('📋 Poblando formulario con datos cargados...');
+      poblarFormularioConDatos(editData);
+    }
+  }, [isEditMode, editData, loading, programas, actividades, modalidades, contratos]);
+
+  // Efecto para establecer información del consultor en modo edición
+  useEffect(() => {
+    if (isEditMode && contratoSeleccionado && contratos.length > 0 && !consultorSeleccionado) {
+      const contrato = contratos.find(c => c.oamp.toString() === contratoSeleccionado);
+      if (contrato) {
+        const consultorData = {
+          ...contrato,
+          usu_segundo_nombre: contrato.usu_segundo_nombre || '',
+          usu_telefono: contrato.usu_telefono || 'No especificado',
+          usu_direccion: contrato.usu_direccion || 'No especificada',
+          are_descripcion: contrato.are_descripcion || 'No especificada'
+        };
+        
+        setConsultorSeleccionado(consultorData);
+        console.log('📋 Consultor establecido en modo edición:', consultorData);
+      }
+    }
+  }, [isEditMode, contratoSeleccionado, contratos, consultorSeleccionado]);
+
+  // Función para poblar el formulario con datos existentes (corregida)
+  const poblarFormularioConDatos = (editInfo) => {
+    const { data, tipo } = editInfo;
+    
+    console.log('🔄 Poblando formulario con datos:', { data, tipo });
+    
+    // Función helper para formatear horas
+    const formatearHora = (hora) => {
+      if (!hora) return '';
+      
+      // Si ya está en formato HH:MM, devolverla tal como está
+      if (typeof hora === 'string' && hora.match(/^\d{2}:\d{2}$/)) {
+        return hora;
+      }
+      
+      // Si viene como timestamp o con segundos, extraer solo HH:MM
+      let horaString = String(hora);
+      if (horaString.includes('T')) {
+        horaString = horaString.split('T')[1];
+      }
+      if (horaString.includes(':')) {
+        const partes = horaString.split(':');
+        return `${partes[0].padStart(2, '0')}:${partes[1].padStart(2, '0')}`;
+      }
+      
+      return horaString;
+    };
+
+    // Función helper para formatear fecha
+    const formatearFecha = (fecha) => {
+      if (!fecha) return '';
+      
+      if (fecha.includes('T')) {
+        return fecha.split('T')[0];
+      }
+      return fecha;
+    };
+    
+    if (tipo === 'grupal') {
+      // Datos para programación grupal
+      setActividadSeleccionada(data.act_id?.toString() || '');
+      setModalidadSeleccionada(data.mod_id?.toString() || '');
+      setRutaSeleccionada(data.pr_id?.toString() || '');
+      
+      // Usar el prog_id del backend si está disponible
+      if (data.prog_id) {
+        setProgramaSeleccionado(data.prog_id.toString());
+        console.log('📋 Programa establecido desde backend:', data.prog_id);
+      } else {
+        // Fallback: buscar el programa que contiene esta ruta
+        const rutaEncontrada = programas.find(prog => 
+          prog.rutas.some(ruta => ruta.pr_id.toString() === data.pr_id?.toString())
+        );
+        if (rutaEncontrada) {
+          setProgramaSeleccionado(rutaEncontrada.prog_id.toString());
+          console.log('📋 Programa encontrado por búsqueda:', rutaEncontrada.prog_nombre);
+        }
+      }
+      
+      setContratoSeleccionado(data.oamp?.toString() || '');
+      setTematica(data.pro_tematica || '');
+      setMes(data.pro_mes || '');
+      setFechaFormacion(formatearFecha(data.pro_fecha_formacion));
+      setHoraInicio(formatearHora(data.pro_hora_inicio));
+      setHoraFin(formatearHora(data.pro_hora_fin));
+      setHorasDictar(data.pro_horas_dictar?.toString() || '');
+      setCoordinadorCCB(data.pro_coordinador_ccb || '');
+      setDireccion(data.pro_direccion || '');
+      setEnlace(data.pro_enlace || '');
+      setCodigoAgenda(data.pro_codigo_agenda?.toString() || '');
+      setEntregables(data.pro_entregables || '');
+      setDependencia(data.pro_dependencia || '');
+      setObservaciones(data.pro_observaciones || '');
+      setRegionSeleccionada(data.val_reg_id?.toString() || '');
+      
+      // Valores calculados
+      setHorasPagar(data.pro_numero_hora_pagar?.toString() || '');
+      setHorasCobrar(data.pro_numero_hora_cobrar?.toString() || '');
+      setValorHora(data.pro_valor_hora?.toString() || '');
+      setValorTotalPagar(data.pro_valor_total_hora_pagar?.toString() || '');
+      setValorTotalCobrar(data.pro_valor_total_hora_ccb?.toString() || '');
+      
+    } else if (tipo === 'individual') {
+      // Datos para programación individual
+      setActividadSeleccionada(data.act_id?.toString() || '');
+      setModalidadSeleccionada(data.mod_id?.toString() || '');
+      setRutaSeleccionada(data.pr_id?.toString() || '');
+      
+      // Usar el prog_id del backend si está disponible
+      if (data.prog_id) {
+        setProgramaSeleccionado(data.prog_id.toString());
+        console.log('📋 Programa establecido desde backend:', data.prog_id);
+      } else {
+        // Fallback: buscar el programa que contiene esta ruta
+        const rutaEncontrada = programas.find(prog => 
+          prog.rutas.some(ruta => ruta.pr_id.toString() === data.pr_id?.toString())
+        );
+        if (rutaEncontrada) {
+          setProgramaSeleccionado(rutaEncontrada.prog_id.toString());
+          console.log('📋 Programa encontrado por búsqueda:', rutaEncontrada.prog_nombre);
+        }
+      }
+      
+      setContratoSeleccionado(data.oamp?.toString() || '');
+      setTematica(data.proin_tematica || '');
+      setMes(data.proin_mes || '');
+      setFechaFormacion(formatearFecha(data.proin_fecha_formacion));
+      setHoraInicio(formatearHora(data.proin_hora_inicio));
+      setHoraFin(formatearHora(data.proin_hora_fin));
+      setHorasDictar(data.proin_horas_dictar?.toString() || '');
+      setCoordinadorCCB(data.proin_coordinador_ccb || '');
+      setDireccion(data.proin_direccion || '');
+      setEnlace(data.proin_enlace || '');
+      setCodigoAgenda(data.proin_codigo_agenda?.toString() || '');
+      setEntregables(data.proin_entregables || '');
+      setDependencia(data.proin_dependencia || '');
+      setObservaciones(data.proin_observaciones || '');
+      setRegionSeleccionada(data.val_reg_id?.toString() || '');
+      
+      // Campos específicos de individual
+      setNombreEmpresario(data.proin_nombre_empresario || '');
+      setIdentificacionEmpresario(data.proin_identificacion_empresario || '');
+      
+      // Valores calculados
+      setHorasPagar(data.proin_numero_hora_pagar?.toString() || '');
+      setHorasCobrar(data.proin_numero_hora_cobrar?.toString() || '');
+      setValorHora(data.proin_valor_hora?.toString() || '');
+      setValorTotalPagar(data.proin_valor_total_hora_pagar?.toString() || '');
+      setValorTotalCobrar(data.proin_valor_total_hora_ccb?.toString() || '');
+    }
+    
+    console.log('✅ Formulario poblado completamente con datos de edición');
+  };
+
+  // =========================================================================
   // Funciones auxiliares
   // =========================================================================
   
@@ -167,17 +364,62 @@ function NuevaProgramacionPage() {
     return `OAMP ${contrato.oamp} - ${nombreCompleto} (C.C. ${contrato.usu_cedula})`;
   };
 
-  const calcularValores = () => {
-    // Aquí implementar la lógica de cálculo según región, horas, etc.
-    // Por ahora valores por defecto
-    const horas = parseInt(horasDictar) || 0;
-    const valorBase = 85000; // Valor base por hora
-    
-    setHorasPagar(horas.toString());
-    setHorasCobrar(horas.toString());
-    setValorHora(valorBase.toString());
-    setValorTotalPagar((horas * valorBase).toString());
-    setValorTotalCobrar((horas * valorBase * 2).toString()); // CCB cobra el doble
+  const calcularValores = async () => {
+    // Verificar que tenemos los datos necesarios
+    if (!rutaSeleccionada || !horasDictar) {
+      return;
+    }
+
+    try {
+      console.log('🔄 Calculando valores con datos reales de la base de datos...');
+      
+      const result = await apiService.calcularValoresRuta(
+        rutaSeleccionada,
+        regionSeleccionada,
+        modalidadSeleccionada,
+        horasDictar
+      );
+
+      if (result && result.success) {
+        const { valorHora, horasPagar, horasCobrar, valorTotalPagar, valorTotalCobrar } = result.data;
+        
+        console.log('💰 Valores calculados desde la base de datos:', {
+          valorHora,
+          horasPagar,
+          horasCobrar,
+          valorTotalPagar,
+          valorTotalCobrar
+        });
+
+        setHorasPagar(horasPagar.toString());
+        setHorasCobrar(horasCobrar.toString());
+        setValorHora(valorHora.toString());
+        setValorTotalPagar(valorTotalPagar.toString());
+        setValorTotalCobrar(valorTotalCobrar.toString());
+      } else {
+        console.warn('⚠️ Error al calcular valores, usando valores por defecto');
+        // Fallback a valores por defecto en caso de error
+        const horas = parseInt(horasDictar) || 0;
+        const valorBase = 85000;
+        
+        setHorasPagar(horas.toString());
+        setHorasCobrar(horas.toString());
+        setValorHora(valorBase.toString());
+        setValorTotalPagar((horas * valorBase).toString());
+        setValorTotalCobrar((horas * valorBase * 2).toString());
+      }
+    } catch (error) {
+      console.error('❌ Error al calcular valores:', error);
+      // Fallback a valores por defecto en caso de error
+      const horas = parseInt(horasDictar) || 0;
+      const valorBase = 85000;
+      
+      setHorasPagar(horas.toString());
+      setHorasCobrar(horas.toString());
+      setValorHora(valorBase.toString());
+      setValorTotalPagar((horas * valorBase).toString());
+      setValorTotalCobrar((horas * valorBase * 2).toString());
+    }
   };
 
   // Función para verificar completitud de datos del consultor
@@ -232,10 +474,10 @@ function NuevaProgramacionPage() {
   };
 
   useEffect(() => {
-    if (horasDictar) {
+    if (horasDictar && rutaSeleccionada) {
       calcularValores();
     }
-  }, [horasDictar, regionSeleccionada, municipioSeleccionado]);
+  }, [horasDictar, regionSeleccionada, municipioSeleccionado, modalidadSeleccionada, rutaSeleccionada]);
 
   // =========================================================================
   // Función para enviar el formulario
@@ -282,38 +524,81 @@ function NuevaProgramacionPage() {
 
       let result;
 
-      if (esActividadGrupal()) {
-        // Programación grupal
-        result = await apiService.createProgramacionGrupal({
-          ...datosComunes,
-          pro_tematica: tematica
-        });
-      } else if (esActividadIndividual()) {
-        // Programación individual - cambiar prefijos pro_ por proin_
-        const datosIndividuales = {};
-        Object.keys(datosComunes).forEach(key => {
-          if (key.startsWith('pro_')) {
-            datosIndividuales[key.replace('pro_', 'proin_')] = datosComunes[key];
-          } else {
-            datosIndividuales[key] = datosComunes[key];
-          }
-        });
+      if (isEditMode && editData) {
+        // MODO EDICIÓN
+        console.log('📝 Modo edición - actualizando programación:', editData.id);
+        
+        if (editData.tipo === 'grupal') {
+          // Actualizar programación grupal
+          result = await apiService.updateProgramacion(editData.id, {
+            ...datosComunes,
+            pro_tematica: tematica
+          });
+        } else if (editData.tipo === 'individual') {
+          // Actualizar programación individual - cambiar prefijos pro_ por proin_
+          const datosIndividuales = {};
+          Object.keys(datosComunes).forEach(key => {
+            if (key.startsWith('pro_')) {
+              datosIndividuales[key.replace('pro_', 'proin_')] = datosComunes[key];
+            } else {
+              datosIndividuales[key] = datosComunes[key];
+            }
+          });
 
-        result = await apiService.createProgramacionIndividual({
-          ...datosIndividuales,
-          proin_tematica: tematica,
-          proin_nombre_empresario: nombreEmpresario,
-          proin_identificacion_empresario: identificacionEmpresario
-        });
-      }
-
-      if (result && result.success) {
-        setSuccess("Programación creada exitosamente");
-        setTimeout(() => {
-          navigate("/gestora");
-        }, 2000);
+          result = await apiService.updateProgramacion(editData.id, {
+            ...datosIndividuales,
+            proin_tematica: tematica,
+            proin_nombre_empresario: nombreEmpresario,
+            proin_identificacion_empresario: identificacionEmpresario
+          });
+        }
+        
+        if (result && result.success) {
+          setSuccess("Programación actualizada exitosamente");
+          // Limpiar datos de edición
+          localStorage.removeItem('programacionEditar');
+          setTimeout(() => {
+            navigate("/gestora");
+          }, 2000);
+        } else {
+          setError(result?.message || "Error al actualizar la programación");
+        }
+        
       } else {
-        setError(result?.message || "Error al crear la programación");
+        // MODO CREACIÓN (código original)
+        if (esActividadGrupal()) {
+          // Programación grupal
+          result = await apiService.createProgramacionGrupal({
+            ...datosComunes,
+            pro_tematica: tematica
+          });
+        } else if (esActividadIndividual()) {
+          // Programación individual - cambiar prefijos pro_ por proin_
+          const datosIndividuales = {};
+          Object.keys(datosComunes).forEach(key => {
+            if (key.startsWith('pro_')) {
+              datosIndividuales[key.replace('pro_', 'proin_')] = datosComunes[key];
+            } else {
+              datosIndividuales[key] = datosComunes[key];
+            }
+          });
+
+          result = await apiService.createProgramacionIndividual({
+            ...datosIndividuales,
+            proin_tematica: tematica,
+            proin_nombre_empresario: nombreEmpresario,
+            proin_identificacion_empresario: identificacionEmpresario
+          });
+        }
+
+        if (result && result.success) {
+          setSuccess("Programación creada exitosamente");
+          setTimeout(() => {
+            navigate("/gestora");
+          }, 2000);
+        } else {
+          setError(result?.message || "Error al crear la programación");
+        }
       }
 
     } catch (error) {
@@ -367,7 +652,7 @@ function NuevaProgramacionPage() {
         <div className="page-header">
           <div>
             <h2>Panel de Gestión</h2>
-            <h1>Nueva Programación</h1>
+            <h1>{isEditMode ? 'Editar Programación' : 'Nueva Programación'}</h1>
           </div>
           <Link
             to="/gestora"
@@ -552,24 +837,72 @@ function NuevaProgramacionPage() {
 
                   <div className="form-group">
                   <label htmlFor="horaInicio">Hora Inicio *</label>
-                    <input
-                    type="time"
+                    <select
                     id="horaInicio"
                     value={horaInicio}
                     onChange={(e) => setHoraInicio(e.target.value)}
                       required
-                    />
+                    >
+                      <option value="">Selecciona hora de inicio</option>
+                      <option value="01:00">01:00 AM</option>
+                      <option value="02:00">02:00 AM</option>
+                      <option value="03:00">03:00 AM</option>
+                      <option value="04:00">04:00 AM</option>
+                      <option value="05:00">05:00 AM</option>
+                      <option value="06:00">06:00 AM</option>
+                      <option value="07:00">07:00 AM</option>
+                      <option value="08:00">08:00 AM</option>
+                      <option value="09:00">09:00 AM</option>
+                      <option value="10:00">10:00 AM</option>
+                      <option value="11:00">11:00 AM</option>
+                      <option value="12:00">12:00 PM</option>
+                      <option value="13:00">01:00 PM</option>
+                      <option value="14:00">02:00 PM</option>
+                      <option value="15:00">03:00 PM</option>
+                      <option value="16:00">04:00 PM</option>
+                      <option value="17:00">05:00 PM</option>
+                      <option value="18:00">06:00 PM</option>
+                      <option value="19:00">07:00 PM</option>
+                      <option value="20:00">08:00 PM</option>
+                      <option value="21:00">09:00 PM</option>
+                      <option value="22:00">10:00 PM</option>
+                      <option value="23:00">11:00 PM</option>
+                    </select>
                   </div>
 
                   <div className="form-group">
                   <label htmlFor="horaFin">Hora Fin *</label>
-                    <input
-                    type="time"
+                    <select
                     id="horaFin"
                     value={horaFin}
                     onChange={(e) => setHoraFin(e.target.value)}
                       required
-                    />
+                    >
+                      <option value="">Selecciona hora de fin</option>
+                      <option value="01:00">01:00 AM</option>
+                      <option value="02:00">02:00 AM</option>
+                      <option value="03:00">03:00 AM</option>
+                      <option value="04:00">04:00 AM</option>
+                      <option value="05:00">05:00 AM</option>
+                      <option value="06:00">06:00 AM</option>
+                      <option value="07:00">07:00 AM</option>
+                      <option value="08:00">08:00 AM</option>
+                      <option value="09:00">09:00 AM</option>
+                      <option value="10:00">10:00 AM</option>
+                      <option value="11:00">11:00 AM</option>
+                      <option value="12:00">12:00 PM</option>
+                      <option value="13:00">01:00 PM</option>
+                      <option value="14:00">02:00 PM</option>
+                      <option value="15:00">03:00 PM</option>
+                      <option value="16:00">04:00 PM</option>
+                      <option value="17:00">05:00 PM</option>
+                      <option value="18:00">06:00 PM</option>
+                      <option value="19:00">07:00 PM</option>
+                      <option value="20:00">08:00 PM</option>
+                      <option value="21:00">09:00 PM</option>
+                      <option value="22:00">10:00 PM</option>
+                      <option value="23:00">11:00 PM</option>
+                    </select>
                   </div>
 
                   <div className="form-group">
@@ -873,7 +1206,7 @@ function NuevaProgramacionPage() {
                 className="submit-button"
                 style={{ backgroundColor: colors.primary }}
               >
-                Crear Programación
+                {isEditMode ? 'Actualizar Programación' : 'Crear Programación'}
               </button>
           </div>
         )}

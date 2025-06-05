@@ -1,9 +1,9 @@
 // src/pages/Gestora/Dashboard.js
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import DashboardLayout from '../../components/DashboardLayout';
 import './Dashboard.css';
-import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement, PointElement, LineElement } from 'chart.js';
-import { Bar, Doughnut } from 'react-chartjs-2'; // Line chart was not used in the original, keeping it simple
+import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement } from 'chart.js';
+import { Bar, Doughnut } from 'react-chartjs-2';
 
 // Registrar los componentes necesarios de ChartJS
 ChartJS.register(
@@ -13,233 +13,400 @@ ChartJS.register(
   Title,
   Tooltip,
   Legend,
-  ArcElement,
-  PointElement,
-  LineElement
+  ArcElement
 );
 
 // Helper function to format currency
-const formatCurrency = (value) => {
-  if (typeof value === 'string') {
-    // Remove non-numeric characters except for comma and period for parsing
-    const numericString = value.replace(/[$.-]/g, '').replace(',', '.');
-    const number = parseFloat(numericString);
-    if (isNaN(number)) return value; // Return original if parsing fails
-    return `$${parseInt(number).toLocaleString('es-CO')}`; // Format as integer COP
+const formatCurrency = (valueStr) => {
+  if (typeof valueStr !== 'string') {
+    if (typeof valueStr === 'number') {
+      return `$${valueStr.toLocaleString('es-CO')}`;
+    }
+    return valueStr;
   }
-  if (typeof value === 'number') {
-    return `$${value.toLocaleString('es-CO')}`;
-  }
-  return value; // Return as is if not string or number
+  const numericString = valueStr.replace(/[$.-]/g, '');
+  const number = parseInt(numericString, 10);
+  if (isNaN(number)) return valueStr;
+  return `$${number.toLocaleString('es-CO')}`;
+};
+
+// Helper to parse hours, handling potential empty strings or non-numeric
+const parseHours = (hoursStr) => {
+  const val = parseInt(hoursStr, 10);
+  return isNaN(val) ? 0 : val;
 };
 
 
 function Dashboard() {
-  const [selectedSection, setSelectedSection] = useState('general');
+  const [selectedProgramaId, setSelectedProgramaId] = useState('general');
+  const [selectedRutaId, setSelectedRutaId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
-  const sections = [
+  // Define sections based on PDF PROGRAMAS
+  const programasPrincipales = useMemo(() => [
     { id: 'general', name: 'Vista General', icon: '📊' },
-    { id: 'crecimiento', name: 'Crecimiento Empresarial', icon: '📈' },
-    { id: 'innovacion', name: 'Innovación', icon: '💡' },
-    { id: 'emprendimiento', name: 'Emprendimiento', icon: '🚀' },
-    { id: 'financiero', name: 'Financiero y Productividad', icon: '💰' },
-    { id: 'alimentos', name: 'Sector Alimentos', icon: '🍽️' }
-  ];
+    { id: 'crecimiento_empresarial', name: 'Crecimiento Empresarial', icon: '📈' },
+    { id: 'emprendimiento_inn', name: 'Emprendimiento (Ruta Bgtá/Cund. Inn)', icon: '🚀' },
+    { id: 'consolidacion_escalamiento', name: 'Consolidación y Escalamiento', icon: '🏢' },
+    { id: 'sector_alimentos', name: 'Sector Alimentos', icon: '🍽️' },
+    { id: 'internacionalizacion', name: 'Internacionalización', icon: '🌍' },
+    { id: 'foro_presidente', name: 'Foro Presidente', icon: '🗣️' }
+  ], []);
 
-  // Datos actualizados basados en el PDF
-  const sectionData = {
+  // Restructured data based on PDF, including PROGRAMAS and their RUTAS
+  const dashboardData = useMemo(() => ({
     general: {
-      stats: [
-        { title: 'Total Horas Programa', value: '13,895' }, // [cite: 2]
-        { title: 'Valor Total Programa', value: formatCurrency('2691023510') }, // [cite: 2]
-        { title: 'Horas Ejecutadas (Abril 2025)', value: '113' } // [cite: 2]
+      name: 'Vista General',
+      icon: '📊',
+      programStats: [
+        { title: 'Total Horas Propuesta', value: parseHours('13895').toLocaleString('es-CO') }, // Corrected total from PDF [cite: 1, 3]
+        { title: 'Valor Total Propuesta', value: formatCurrency('2691023510') }, // [cite: 1, 3]
+        { title: 'Horas Ejecutadas (Abril 2025)', value: parseHours('113').toLocaleString('es-CO') } // [cite: 1, 3]
       ],
-      barData: {
-        labels: ['Crecimiento E.', 'Innovación', 'Emprendimiento', 'Financiero & Prod.', 'Alimentos'],
+      programBarData: {
+        labels: ['Crecimiento E.', 'Innovación', 'Emprendimiento', 'Consolidación (Rutas Principales)', 'Sector Alimentos', 'Internacionalización', 'Foro Presidente'],
         datasets: [{
-          label: 'Horas por Sector/Programa Principal',
-          data: [1310, 480, 1000, 364, 1908], // [cite: 2]
-          backgroundColor: [
-            'rgba(227, 25, 55, 0.8)',  // Crecimiento
-            'rgba(54, 162, 235, 0.8)', // Innovación
-            'rgba(255, 206, 86, 0.8)', // Emprendimiento
-            'rgba(75, 192, 192, 0.8)', // Financiero
-            'rgba(153, 102, 255, 0.8)',// Alimentos
+          label: 'Horas Totales por Programa Principal',
+          data: [
+            1310, // Crecimiento Empresarial
+            400 + 1000, // Emprendimiento Inn (Innovacion + Emprendimiento)
+            818 + 765 + 1142 + 4300 + 854 + 1102 + 1044 + 192, // Consolidacion (sum of its main RUTAS from PDF)
+            1908, // Sector Alimentos
+            212 + 100 + 1280, // Internacionalización (sum of Asesorias + Plan)
+            60    // Foro Presidente
           ],
-          borderColor: [
-            'rgba(227, 25, 55, 1)',
-            'rgba(54, 162, 235, 1)',
-            'rgba(255, 206, 86, 1)',
-            'rgba(75, 192, 192, 1)',
-            'rgba(153, 102, 255, 1)',
+          backgroundColor: [
+            'rgba(227, 25, 55, 0.8)', 'rgba(54, 162, 235, 0.8)', 'rgba(255, 206, 86, 0.8)',
+            'rgba(75, 192, 192, 0.8)', 'rgba(153, 102, 255, 0.8)', 'rgba(255, 159, 64, 0.8)',
+            'rgba(120, 120, 120, 0.8)'
           ],
           borderWidth: 1,
         }]
       },
-      doughnutData: { // Added for 'general' section
-        labels: ['Horas Ejecutadas (Abril 2025)', 'Horas Pendientes'],
+      programDoughnutData: {
+        labels: ['Horas Ejecutadas (Abril 2025)', 'Horas Pendientes (Propuesta Total)'],
         datasets: [{
-          data: [113, 13895 - 113], // 113 ejecutadas, 13782 pendientes [cite: 2]
-          backgroundColor: [
-            'rgba(227, 25, 55, 0.8)', // Rojo para ejecutadas
-            'rgba(228, 228, 228, 0.8)', // Gris para pendientes
+          data: [113, 13895 - 113],
+          backgroundColor: ['rgba(227, 25, 55, 0.8)', 'rgba(228, 228, 228, 0.8)'],
+          borderWidth: 1,
+        }]
+      },
+      rutas: [] // No sub-rutas for general view
+    },
+    crecimiento_empresarial: {
+      name: 'Crecimiento Empresarial',
+      icon: '📈',
+      programStats: [ // These are effectively RUTA stats as it's a single block
+        { title: 'Total Horas', value: parseHours('1310').toLocaleString('es-CO') }, // [cite: 1, 3]
+        { title: 'Valor Total', value: formatCurrency('230080540') }, // [cite: 1, 3]
+        { title: 'Nº Consultores', value: '10' }, // [cite: 1, 3]
+        { title: 'Horas Ejecutadas (Abril)', value: parseHours('10').toLocaleString('es-CO') } // [cite: 1, 3]
+      ],
+      areaConocimientoPrincipal: "Finanzas corporativas, valoración de empresas, intervención psicosocial.", // [cite: 1, 3]
+      rutas: [
+        {
+          id: 'crecimiento_main', name: 'Detalle Crecimiento Empresarial',
+          stats: [
+            { title: 'Total Horas Ruta', value: parseHours('1310').toLocaleString('es-CO') },
+            { title: 'Valor Total Ruta', value: formatCurrency('230080540') },
+            { title: 'Nº Consultores', value: '10' },
+            { title: 'Horas Ejecutadas (Abril)', value: parseHours('10').toLocaleString('es-CO') }
           ],
-          borderColor: [
-            'rgba(227, 25, 55, 1)',
-            'rgba(200, 200, 200, 1)',
+          barData: {
+            labels: ['Ejecutadas (Abril)', 'Pendientes (del total)'],
+            datasets: [{
+              label: 'Progreso Horas', data: [10, 1310 - 10],
+              backgroundColor: ['rgba(227, 25, 55, 0.8)', 'rgba(227, 25, 55, 0.3)'],
+              borderColor: 'rgba(227, 25, 55, 1)', borderWidth: 1,
+            }]
+          },
+          areaConocimiento: "Finanzas corporativas. Planificaciones financieras, construcción y análisis de indicadores financieros, valoración de empresas, inmersión de riesgo. Atención e implementación de programas de intervención personal y familiar."  // [cite: 1, 3]
+        }
+      ]
+    },
+    emprendimiento_inn: {
+      name: 'Emprendimiento (Ruta Bgtá/Cund. Inn)',
+      icon: '🚀',
+      programStats: [
+        { title: 'Total Horas (Inn+Empr)', value: parseHours(String(400 + 1000)).toLocaleString('es-CO') }, // Sum of TOTAL HORAS [cite: 1, 3]
+        { title: 'Valor Total (Inn+Empr)', value: formatCurrency(String(102880200 + 281014400)) }, // Sum of VALOR TOTAL [cite: 1, 3]
+        { title: 'Nº Consultores', value: '10' }, // [cite: 1, 3]
+        { title: 'Horas Ejecutadas (Abril)', value: parseHours('55').toLocaleString('es-CO') } // [cite: 1, 3]
+      ],
+      rutas: [
+        {
+          id: 'innovacion', name: 'RUTA: INNOVACIÓN',
+          stats: [
+            { title: 'Total Horas Sector', value: parseHours('480').toLocaleString('es-CO') }, // [cite: 1, 3]
+            { title: 'Valor Total', value: formatCurrency('102880200') }, // [cite: 1, 3]
+            { title: 'Promedio Horas/Consultor', value: '92' } // [cite: 1, 3]
           ],
-          borderWidth: 1,
-        }]
-      }
+          barData: {
+            labels: ['Horas Asignadas'], datasets: [{ label: 'Innovación', data: [480], backgroundColor: 'rgba(54, 162, 235, 0.8)' }]
+          },
+          areaConocimiento: "Innovación, Metodologías Ágiles, Manejo de herramientas IA" // [cite: 1, 3]
+        },
+        {
+          id: 'emprendimiento', name: 'RUTA: EMPRENDIMIENTO',
+          stats: [
+            { title: 'Total Horas Sector', value: parseHours('1000').toLocaleString('es-CO') }, // [cite: 1, 3]
+            { title: 'Valor Total', value: formatCurrency('281014400') }, // [cite: 1, 3]
+            { title: 'Promedio Horas/Consultor', value: '160' } // [cite: 1, 3]
+          ],
+          barData: {
+            labels: ['Horas Asignadas'], datasets: [{ label: 'Emprendimiento', data: [1000], backgroundColor: 'rgba(255, 206, 86, 0.8)' }]
+          },
+          areaConocimiento: "Marketing, Modelo de negocio, Emprendimiento, Financiero, Legal, Portafolio de Productos, Estrategia de Marketing, Portafolio de Productos, Pricing y Monetización" // [cite: 1, 3]
+        }
+      ]
     },
-    crecimiento: {
-      stats: [
-        { title: 'Total Horas Asignadas', value: '1,310' }, // [cite: 2]
-        { title: 'Valor Total Estimado', value: formatCurrency('230080540') }, // [cite: 2]
-        { title: 'Nº Consultores', value: '10' } // [cite: 2]
+    consolidacion_escalamiento: {
+      name: 'Consolidación y Escalamiento Empresarial',
+      icon: '🏢',
+      // Sum of its main RUTAS from PDF (excluding Alimentos, FinancieroProd, Inter)
+      programStats: [
+        { title: 'Total Horas (Rutas Base)', value: parseHours(String(818+765+1142+4300+854+1102+1044+192)).toLocaleString('es-CO') },
+        { title: 'Valor Total (Rutas Base)', value: formatCurrency(String(143868612+134300010+200574028+755228200 /* Placeholder sum, complete with all rutas */))},
+        { title: 'Nº Rutas Principales', value: '8' } // Count of direct RUTAS under this program in PDF
       ],
-      barData: {
-        labels: ['Ejecutadas (Abril 2025)', 'Pendientes (del total)'],
-        datasets: [{
-          label: 'Progreso Horas Crecimiento Empresarial',
-          data: [10, 1310 - 10], // 10 ejecutadas en Abril [cite: 2]
-          backgroundColor: ['rgba(227, 25, 55, 0.8)', 'rgba(227, 25, 55, 0.3)'],
-          borderColor: 'rgba(227, 25, 55, 1)',
-          borderWidth: 1,
-        }]
-      }
+      rutas: [
+        { id: 'ce_est_fin_moda', name: 'Est. Financiera (Moda)', totalHoras: 818, valorTotal: '143868612', consultores: 10, areaConocimiento: "Financiero" }, // [cite: 1, 3]
+        { id: 'ce_fort_vent_moda', name: 'Fort. Ventas (Moda)', totalHoras: 705, valorTotal: '134300010', consultores: 'N/A', areaConocimiento: "Venta, Marketing, organización" }, // [cite: 1, 3]
+        { id: 'ce_prog_abierta_region', name: 'Prog. Abierta y Región', totalHoras: 1142, valorTotal: '200574028', consultores: 10, areaConocimiento: "Mercadeo y ventas, estrategia, financiero, calidad, etc." }, // [cite: 1, 3]
+        { id: 'ce_ciclos_focalizados', name: 'Ciclos Focalizados (Multisectorial)', totalHoras: 4300, valorTotal: '755228200', /* Consultores varies by sub-ciclo */ areaConocimiento: "Talento Humano (Construc.), Excelencia (Turismo), Financiero (Servicios), Transformación Digital, Tecnología (Modelos Neg., Logística), Desarrollo Proveedores, Marketing (Gastronómico), Interpersonal (Ventas)" }, // [cite: 1, 3]
+        // Individual sub-items of "CICLOS FOCALIZADOS" can be added as further nested detail or separate RUTAS if desired.
+        // For simplicity, starting with main RUTAS under "Consolidación".
+         { id: 'ce_tec_cadena_abast', name: 'Tec. Cadena Abastecimiento', totalHoras: 854, valorTotal: 'N/A en PDF', consultores: 20, areaConocimiento: "Gestión de cadena de suministro, ERP, WMS, automatización, etc." }, // [cite: 1, 3] (Valor Total seems missing in PDF for this specific line)
+         { id: 'ce_des_proveedores', name: 'Desarrollo Proveedores', totalHoras: 1102, valorTotal: 'N/A en PDF', consultores: 13, areaConocimiento: "Productividad operacional, laboral, gestión de calidad, logística"}, // [cite: 1, 3]
+         { id: 'ce_mkt_experiencia_gastro', name: 'Mkt. Experiencia (Gastronómico)', totalHoras: 1044, valorTotal: 'N/A en PDF', consultores: 2, areaConocimiento: "Propuestas de valor, conexión emocional, fidelización" }, // [cite: 1, 3]
+         { id: 'ce_mkt_impulsar_crec', name: 'Mkt. para Impulsar Crecimiento', totalHoras: 192, valorTotal: 'N/A en PDF', consultores: 'N/A', areaConocimiento: "Estrategias de mercadeo, plan de ventas, marketing digital"}, // [cite: 1, 3] (Note: PDF has "TOTAL HORAS" as 192 for "Interpersonal entrenamiento de ventas sugev" which seems to be this one, other fields are sparse for the "Mercadeo para Impulsar..." line)
+      ].map(r => ({ // Common structure for rutas under Consolidacion
+          ...r,
+          stats: [
+            { title: 'Total Horas Ruta', value: parseHours(String(r.totalHoras)).toLocaleString('es-CO') },
+            { title: 'Valor Total Ruta', value: r.valorTotal !== 'N/A en PDF' ? formatCurrency(r.valorTotal) : 'No especificado' },
+            { title: 'Nº Consultores', value: r.consultores || 'N/A' },
+          ],
+          barData: {
+            labels: [r.name.substring(0,20)], datasets: [{ label: 'Horas Asignadas', data: [r.totalHoras], backgroundColor: 'rgba(255, 206, 86, 0.8)' }]
+          }
+      }))
     },
-    innovacion: { // RUTA: INNOVACION
-      stats: [
-        { title: 'Total Horas Asignadas', value: '480' }, // [cite: 2]
-        { title: 'Valor Total Estimado', value: formatCurrency('102880200') }, // [cite: 2]
-        { title: 'Nº Consultores (Grupo Empr.)', value: '10' } // [cite: 2]
+    sector_alimentos: {
+      name: 'Sector Alimentos',
+      icon: '🍽️',
+      programStats: [
+        { title: 'Total Horas Programa', value: parseHours('1908').toLocaleString('es-CO') }, // [cite: 1, 3]
+        { title: 'Valor Total Programa', value: formatCurrency('335109672') }, // [cite: 1, 3]
+        // N consultores is per RUTA
       ],
-      barData: {
-        labels: ['Total Horas Asignadas Innovación'],
-        datasets: [{
-          label: 'Horas Innovación',
-          data: [480], // [cite: 2]
-          backgroundColor: 'rgba(54, 162, 235, 0.8)',
-          borderColor: 'rgba(54, 162, 235, 1)',
-          borderWidth: 1,
-        }]
-      }
+      rutas: [
+        {
+          id: 'alimentos_ia', name: 'RUTA: Aplicación IA (Alimentos)',
+          stats: [
+            { title: 'Total Horas Sector', value: parseHours('336').toLocaleString('es-CO') }, // [cite: 1, 3]
+            { title: 'Nº Consultores', value: '3' }, // [cite: 1, 3]
+            // Valor total for this specific RUTA not directly isolated in main summary, part of program total
+          ],
+          barData: { labels: ['Horas Asignadas'], datasets: [{ label: 'IA en Alimentos', data: [336], backgroundColor: 'rgba(153, 102, 255, 0.8)' }] },
+          areaConocimiento: "Aplicación de la IA en empresas, herramientas y técnicas de IA para marketing y comunicación, chatbots, análisis de datos con IA." // [cite: 1, 3]
+        },
+        {
+          id: 'alimentos_talento', name: 'RUTA: Fidelización y Talento Humano (Alimentos)',
+          stats: [
+            { title: 'Total Horas Sector', value: parseHours('336').toLocaleString('es-CO') }, // [cite: 1, 3]
+            { title: 'Nº Consultores', value: '2' }, // [cite: 1, 3]
+          ],
+          barData: { labels: ['Horas Asignadas'], datasets: [{ label: 'Talento en Alimentos', data: [336], backgroundColor: 'rgba(255, 159, 64, 0.8)' }] },
+          areaConocimiento: "Atracción y retención del talento humano y administración del talento humano." // [cite: 1, 3]
+        },
+        { // This RUTA is listed under SECTOR ALIMENTOS PROGRAMA in PDF
+          id: 'alimentos_fin_prod', name: 'RUTA: Financiero y Productividad (en Alimentos)',
+          stats: [
+            { title: 'Total Horas Sector', value: parseHours('364').toLocaleString('es-CO') }, // [cite: 1, 3]
+            { title: 'Valor Total', value: formatCurrency('63930770') }, // [cite: 1, 3]
+            { title: 'Nº Consultores', value: '2' }, // [cite: 1, 3]
+          ],
+          barData: {
+            labels: ["Productividad", "Gest. Financiera", "Tributario"],
+            datasets: [{ label: 'Distribución Horas (aprox.)', data: [121, 121, 122], backgroundColor: 'rgba(75, 192, 192, 0.8)' }]
+          },
+          areaConocimiento: "Modernización de la Productividad, Gestión Financiero, Tributario y Financiero." // [cite: 1, 3]
+        }
+      ]
     },
-    emprendimiento: { // RUTA: EMPRENDIMIENTO
-      stats: [
-        { title: 'Total Horas Asignadas', value: '1,000' }, // [cite: 2]
-        { title: 'Valor Total Estimado', value: formatCurrency('281014400') }, // [cite: 2]
-        { title: 'Nº Consultores (Grupo Empr.)', value: '10' } // [cite: 2]
+    internacionalizacion: {
+      name: 'Internacionalización',
+      icon: '🌍',
+      programStats: [
+        { title: 'Total Horas Programa', value: parseHours(String(212 + 100 + 1280)).toLocaleString('es-CO') }, // Sum of Asesorias + Plan [cite: 1, 3]
+        { title: 'Valor Total Programa', value: formatCurrency(String(9256488 + 100883584 + 196000000)) }, // Sum for Plan + Asesorias [cite: 1, 3] (PDF VALOR TOTAL for "Asesorias indidates" is 09:256.488, assuming 9,256,488. The other values are 100.883.584 and 196.000.000)
+        { title: 'Horas Ejecutadas (Abril)', value: parseHours('30').toLocaleString('es-CO') } // [cite: 1, 3]
       ],
-      barData: {
-        labels: ['Total Horas Asignadas Emprendimiento'],
-        datasets: [{
-          label: 'Horas Emprendimiento',
-          data: [1000], // [cite: 2]
-          backgroundColor: 'rgba(255, 206, 86, 0.8)',
-          borderColor: 'rgba(255, 206, 86, 1)',
-          borderWidth: 1,
-        }]
-      }
+      rutas: [
+        {
+          id: 'inter_asesorias', name: 'RUTA: Asesorías Individuales (Inter.)',
+          stats: [
+            { title: 'Total Horas', value: parseHours(String(212+100)).toLocaleString('es-CO') }, // Sum of 212 + 100 [cite: 1, 3]
+            { title: 'Valor Total', value: formatCurrency('9256488') }, // [cite: 1, 3]
+            { title: 'Nº Consultores', value: '32' } // [cite: 1, 3]
+          ],
+          barData: { labels: ['Horas Asignadas'], datasets: [{ label: 'Asesorías', data: [312], backgroundColor: 'rgba(255, 99, 132, 0.8)' }] },
+          areaConocimiento: "Consultoría, Gestión del Talento Humano, Servicios Financieros, Cadenas de Abastecimiento, Salud, Sector Farmacéutico, Construcción y Energía." // [cite: 1, 3]
+        },
+        {
+          id: 'inter_plan', name: 'RUTA: Plan de Internacionalización',
+          stats: [
+            { title: 'Total Horas', value: parseHours('1280').toLocaleString('es-CO') }, // PDF has 1.28, assuming 1280 [cite: 1, 3]
+            { title: 'Valor Total (Suma Entregables)', value: formatCurrency(String(100883584 + 196000000)) }, // Sum of two VALOR TOTAL lines for Plan [cite: 1, 3]
+            { title: 'Nº Consultores', value: '13' } // [cite: 1, 3]
+          ],
+          barData: {
+            labels: ['Preselección Mercado', 'MarketFit', 'One Pager'], // Based on SECTORES in PDF
+            datasets: [{ label: 'Horas por Entregable (Ejemplo)', data: [420, 430, 430], backgroundColor: 'rgba(75, 192, 75, 0.8)' }] // Placeholder data
+          },
+          areaConocimiento: "Finanzas internacionales, comercio exterior, economía, administración de empresas, finanzas, negocios internacionales, relaciones internacionales o afines." // [cite: 1, 3]
+        }
+      ]
     },
-    financiero: { // RUTA: FINANCIERO Y PRODUCTIVIDAD
-      stats: [
-        { title: 'Total Horas Asignadas', value: '364' }, // [cite: 2]
-        { title: 'Valor Total Estimado', value: formatCurrency('63930770') }, // [cite: 2]
-        { title: 'Nº Consultores', value: '2' } // [cite: 2]
+    foro_presidente: {
+      name: 'Foro Presidente',
+      icon: '🗣️',
+      programStats: [ // These are RUTA stats as it's one block
+        { title: 'Total Horas', value: parseHours('60').toLocaleString('es-CO') }, // [cite: 1, 3]
+        { title: 'Valor Total', value: formatCurrency('12300000') }, // [cite: 1, 3]
+        { title: 'Nº Consultores', value: '4' }, // [cite: 1, 3]
       ],
-      barData: {
-        labels: ["Productividad", "Gestión Financiera", "Tributario/Financiero"],
-        datasets: [{
-          label: 'Distribución Horas (aprox.)',
-          data: [121, 121, 122], // Aproximación de 364h
-          backgroundColor: 'rgba(75, 192, 192, 0.8)',
-          borderColor: 'rgba(75, 192, 192, 1)',
-          borderWidth: 1,
-        }]
-      }
-    },
-    alimentos: { // PROGRAMA: SECTOR ALIMENTOS
-      stats: [
-        { title: 'Total Horas Programa', value: '1,908' }, // [cite: 2]
-        { title: 'Valor Total Estimado', value: formatCurrency('335109672') }, // [cite: 2]
-        { title: 'Nº Consultores (Subáreas)', value: '5+' } // 3 (IA) + 2 (Talento Humano) [cite: 2]
-      ],
-      barData: {
-        labels: ["Aplicación IA (Alim.)", "Talento Humano (Alim.)"],
-        datasets: [{
-          label: 'Horas por Sub-Programa (Sector Alimentos)',
-          data: [336, 336], // [cite: 2]
-          backgroundColor: ['rgba(153, 102, 255, 0.8)', 'rgba(255, 159, 64, 0.8)'],
-          borderColor: ['rgba(153, 102, 255, 1)', 'rgba(255, 159, 64, 1)'],
-          borderWidth: 1,
-        }]
-      }
+      rutas: [
+        {
+          id: 'foro_escuela_mentores', name: 'RUTA: Escuela de Mentores, Voluntariado y Prog. Región',
+          stats: [
+            { title: 'Total Horas Ruta', value: parseHours('60').toLocaleString('es-CO') },
+            { title: 'Valor Total Ruta', value: formatCurrency('12300000') },
+            { title: 'Nº Consultores', value: '4' },
+          ],
+          barData: {
+            labels: ['Horas Asignadas'], datasets: [{ label: 'Foro Presidente', data: [60], backgroundColor: 'rgba(120, 120, 120, 0.8)'}]
+          },
+          areaConocimiento: "Storytelling y herramientas para la mentoría, Creatividad desde la IA, Coaching de equipos de destinos, Liderazgo, Gestión del talento en la era de IA." // [cite: 1, 3]
+        }
+      ]
     }
-  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }), []);
 
 
   useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.innerWidth <= 768);
     };
-
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   useEffect(() => {
-    setLoading(true); // Iniciar carga al cambiar de sección
+    setLoading(true);
     const timer = setTimeout(() => {
       setLoading(false);
-    }, 500); // Simular un pequeño retraso para la carga de datos
+    }, 500);
     return () => clearTimeout(timer);
-  }, [selectedSection]);
+  }, [selectedProgramaId, selectedRutaId]);
 
-  const handleSectionChange = (sectionId) => {
-    setSelectedSection(sectionId);
+  const handleProgramaChange = (programaId) => {
+    setSelectedProgramaId(programaId);
+    setSelectedRutaId(null); // Reset ruta when program changes
+    // If the new programa has only one ruta, select it automatically
+    const programa = dashboardData[programaId];
+    if (programa && programa.rutas && programa.rutas.length === 1) {
+        setSelectedRutaId(programa.rutas[0].id);
+    }
   };
 
-  const renderSectionContent = () => {
-    const currentSection = sectionData[selectedSection];
-    if (!currentSection) return <p>Selecciona una sección.</p>;
+  const handleRutaChange = (rutaId) => {
+    setSelectedRutaId(rutaId);
+  };
 
+  const renderContent = () => {
+    const currentProgramaData = dashboardData[selectedProgramaId];
+    if (!currentProgramaData) return <p>Seleccione un programa.</p>;
+
+    let displayData;
+    let areaConocimientoToShow = currentProgramaData.areaConocimientoPrincipal || ""; // For program overview
+
+    if (selectedRutaId && currentProgramaData.rutas) {
+      const currentRutaData = currentProgramaData.rutas.find(r => r.id === selectedRutaId);
+      if (currentRutaData) {
+        displayData = currentRutaData;
+        areaConocimientoToShow = currentRutaData.areaConocimiento || areaConocimientoToShow;
+      } else {
+        // Fallback to program data if ruta somehow not found, though this shouldn't happen with proper state reset
+        displayData = { stats: currentProgramaData.programStats, barData: currentProgramaData.programBarData, doughnutData: currentProgramaData.programDoughnutData };
+      }
+    } else {
+      // Display Program-level overview
+      displayData = { stats: currentProgramaData.programStats, barData: currentProgramaData.programBarData, doughnutData: currentProgramaData.programDoughnutData };
+    }
+
+    if (!displayData || !displayData.stats) return <p>Cargando datos...</p>;
 
     return (
       <div className="section-content">
+        {/* Ruta Navigation - only if program has multiple rutas and it's not 'general' */}
+        {selectedProgramaId !== 'general' && currentProgramaData.rutas && currentProgramaData.rutas.length > 0 && (
+            <div className="ruta-navigation">
+                <h4>Rutas del Programa "{currentProgramaData.name}":</h4>
+                {currentProgramaData.rutas.map(ruta => (
+                    <button
+                        key={ruta.id}
+                        className={`ruta-button ${selectedRutaId === ruta.id ? 'active' : ''}`}
+                        onClick={() => handleRutaChange(ruta.id)}
+                    >
+                        {ruta.name}
+                    </button>
+                ))}
+                 {/* Button to go back to program overview if a ruta is selected */}
+                {selectedRutaId && (
+                    <button
+                        className="ruta-button"
+                        onClick={() => handleRutaChange(null)}
+                    >
+                        Ver Resumen del Programa
+                    </button>
+                )}
+            </div>
+        )}
+
         <div className="dashboard-stats">
-          {currentSection.stats.map((stat, index) => (
+          {displayData.stats.map((stat, index) => (
             <div key={index} className="stat-card">
               <h3>{stat.title}</h3>
               <p>{stat.value}</p>
             </div>
           ))}
         </div>
+        
+        {areaConocimientoToShow && (
+            <div className="area-conocimiento-card">
+                <h4>Área(s) de Conocimiento Principal(es):</h4>
+                <p>{areaConocimientoToShow}</p>
+            </div>
+        )}
 
         <div className="charts-grid">
-          {currentSection.barData && (
+          {displayData.barData && (
             <div className="chart-container">
-              <h3>{currentSection.barData.datasets[0].label || 'Análisis Principal'}</h3>
+              <h3>{displayData.barData.datasets[0].label || 'Análisis Principal'}</h3>
               <div className="chart-wrapper">
-                <Bar
-                  data={currentSection.barData}
-                  options={chartOptions}
-                />
+                <Bar data={displayData.barData} options={chartOptions} />
               </div>
             </div>
           )}
-          
-          {selectedSection === 'general' && currentSection.doughnutData && (
+          {displayData.doughnutData && ( // Only show doughnut if data exists (e.g., for 'general')
             <div className="chart-container">
-              <h3>Progreso General de Horas</h3>
+              <h3>{displayData.doughnutData.datasets[0].label || 'Progreso General'}</h3>
               <div className="chart-wrapper">
-                <Doughnut
-                  data={currentSection.doughnutData}
-                  options={doughnutOptions}
-                />
+                <Doughnut data={displayData.doughnutData} options={doughnutOptions} />
               </div>
             </div>
           )}
@@ -252,7 +419,7 @@ function Dashboard() {
               <strong>{new Date().toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' })}</strong>
             </div>
             <div className="stat-item">
-              <span>Estado del Programa</span>
+              <span>Estado General</span>
               <strong className="status-active">Activo</strong>
             </div>
           </div>
@@ -267,36 +434,17 @@ function Dashboard() {
     plugins: {
       legend: {
         position: isMobile ? 'bottom' : 'top',
-        labels: {
-          boxWidth: isMobile ? 10 : 12,
-          padding: isMobile ? 8 : 10,
-          font: {
-            size: isMobile ? 10 : 12
-          }
-        }
+        labels: { boxWidth: isMobile ? 10 : 12, padding: isMobile ? 8 : 10, font: { size: isMobile ? 10 : 12 } }
       },
       tooltip: {
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-        titleColor: '#fff',
-        bodyColor: '#fff',
-        borderColor: 'rgba(0,0,0,0.1)',
-        borderWidth: 1,
-        padding: isMobile ? 8 : 10,
-        bodyFont: {
-          size: isMobile ? 11 : 12
-        },
-        titleFont: {
-          size: isMobile ? 12 : 13,
-          weight: 'bold'
-        },
+        backgroundColor: 'rgba(0, 0, 0, 0.8)', titleColor: '#fff', bodyColor: '#fff',
+        borderColor: 'rgba(0,0,0,0.1)', borderWidth: 1, padding: isMobile ? 8 : 10,
+        bodyFont: { size: isMobile ? 11 : 12 }, titleFont: { size: isMobile ? 12 : 13, weight: 'bold' },
         callbacks: {
             label: function(context) {
                 let label = context.dataset.label || '';
-                if (label) {
-                    label += ': ';
-                }
+                if (label) { label += ': '; }
                 if (context.parsed.y !== null) {
-                    // Formatear como número con separadores de miles
                     label += context.parsed.y.toLocaleString('es-CO');
                     if (context.dataset.label && context.dataset.label.toLowerCase().includes('horas')) {
                         label += ' horas';
@@ -309,69 +457,31 @@ function Dashboard() {
     },
     scales: {
       y: {
-        beginAtZero: true,
-        grid: {
-          drawBorder: false,
-          color: 'rgba(0,0,0,0.05)'
-        },
-        ticks: {
-          font: {
-            size: isMobile ? 9 : 11
-          },
-          maxTicksLimit: isMobile ? 5 : 6,
-           callback: function(value) {
-            return value.toLocaleString('es-CO'); // Formato con separador de miles
-          }
+        beginAtZero: true, grid: { drawBorder: false, color: 'rgba(0,0,0,0.05)' },
+        ticks: { font: { size: isMobile ? 9 : 11 }, maxTicksLimit: isMobile ? 5 : 6,
+           callback: function(value) { return value.toLocaleString('es-CO'); }
         }
       },
       x: {
-        grid: {
-          display: false
-        },
-        ticks: {
-          font: {
-            size: isMobile ? 9 : 11
-          },
-          maxRotation: isMobile ? 60 : 0,
-          minRotation: isMobile ? 45 : 0
-        }
+        grid: { display: false },
+        ticks: { font: { size: isMobile ? 9 : 11 }, maxRotation: isMobile ? 60 : 0, minRotation: isMobile ? 45 : 0 }
       }
     },
-    animation: {
-        duration: 800,
-        easing: 'easeInOutQuart'
-    }
+    animation: { duration: 800, easing: 'easeInOutQuart' }
   };
 
   const doughnutOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
+    responsive: true, maintainAspectRatio: false,
     plugins: {
-      legend: {
-        position: 'bottom',
-        labels: {
-          boxWidth: isMobile ? 10 : 12,
-          padding: isMobile ? 8 : 10,
-          font: {
-            size: isMobile ? 10 : 12
-          }
-        }
-      },
+      legend: { position: 'bottom', labels: { boxWidth: isMobile ? 10 : 12, padding: isMobile ? 8 : 10, font: { size: isMobile ? 10 : 12 } } },
       tooltip: {
-        backgroundColor: 'rgba(0,0,0,0.8)',
-        titleColor: '#fff',
-        bodyColor: '#fff',
-        borderColor: 'rgba(0,0,0,0.1)',
-        borderWidth: 1,
-        padding: isMobile ? 8 : 10,
+        backgroundColor: 'rgba(0,0,0,0.8)', titleColor: '#fff', bodyColor: '#fff',
+        borderColor: 'rgba(0,0,0,0.1)', borderWidth: 1, padding: isMobile ? 8 : 10,
         callbacks: {
             label: function(context) {
                 let label = context.label || '';
-                if (label) {
-                    label += ': ';
-                }
+                if (label) { label += ': '; }
                 if (context.parsed !== null) {
-                     // Formatear como número con separadores de miles
                     label += context.parsed.toLocaleString('es-CO');
                     label += ' horas';
                 }
@@ -381,11 +491,7 @@ function Dashboard() {
       }
     },
     cutout: isMobile ? '60%' : '70%',
-    animation: {
-        animateRotate: true,
-        animateScale: true,
-        duration: 1000
-    }
+    animation: { animateRotate: true, animateScale: true, duration: 1000 }
   };
 
   return (
@@ -396,14 +502,14 @@ function Dashboard() {
         </div>
 
         <div className="dashboard-navigation">
-          {sections.map(section => (
+          {programasPrincipales.map(prog => (
             <button
-              key={section.id}
-              className={`nav-button ${selectedSection === section.id ? 'active' : ''}`}
-              onClick={() => handleSectionChange(section.id)}
+              key={prog.id}
+              className={`nav-button ${selectedProgramaId === prog.id ? 'active' : ''}`}
+              onClick={() => handleProgramaChange(prog.id)}
             >
-              <span className="nav-icon">{section.icon}</span>
-              {isMobile && sections.length > 4 ? '' : section.name}
+              <span className="nav-icon">{prog.icon}</span>
+              {isMobile && programasPrincipales.length > 4 ? '' : prog.name}
             </button>
           ))}
         </div>
@@ -411,10 +517,10 @@ function Dashboard() {
         {loading ? (
           <div className="dashboard-loading">
             <div className="loading-spinner"></div>
-            <p>Cargando datos de la sección...</p>
+            <p>Cargando datos...</p>
           </div>
         ) : (
-          renderSectionContent()
+          renderContent()
         )}
       </div>
     </DashboardLayout>
