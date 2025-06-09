@@ -19,7 +19,7 @@
   padding: 1rem;
   border-bottom: 1px solid #eee;
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
   align-items: center;
   gap: 1rem;
 }
@@ -28,6 +28,24 @@
   display: flex;
   align-items: center;
   gap: 1rem;
+}
+
+.user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #E31937;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 1rem;
+}
+
+.user-details {
+  display: flex;
+  flex-direction: column;
 }
 
 .user-name {
@@ -48,7 +66,6 @@
   font-size: 0.9rem;
   cursor: pointer;
   transition: opacity 0.3s ease;
-  background-color: #E31937;
   color: white;
 }
 
@@ -70,11 +87,23 @@ main {
   }
 
   .dashboard-header {
-    padding-left: 4rem; /* Espacio para el botón de hamburguesa */
+    padding-left: 4rem;
   }
 
   main {
     padding: 1rem;
+  }
+
+  .user-info {
+    gap: 0.5rem;
+  }
+
+  .user-name {
+    font-size: 0.9rem;
+  }
+
+  .user-role {
+    font-size: 0.8rem;
   }
 }
 

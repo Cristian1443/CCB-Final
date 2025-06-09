@@ -11,7 +11,7 @@ import './DashboardLayout.css';
 
 function DashboardLayout({ children }) {
   // Obtenemos el usuario y la función logout del contexto de autenticación
-  const { user, logout } = useAuth(); // Asumiendo que tu contexto AuthContext provee un objeto 'user'
+  const { userData, logout } = useAuth();
   const navigate = useNavigate();
 
   // Función para manejar el cierre de sesión
@@ -20,10 +20,11 @@ function DashboardLayout({ children }) {
     navigate('/login'); // Redirige al usuario a la página de login después de cerrar sesión
   };
 
-  // En una aplicación real, el objeto 'user' del contexto podría tener propiedades como 'name', 'email', etc.
-  // Por ahora, usaremos un nombre ficticio o el userRole si no tenemos un nombre real.
-  const userName = user ? user.name : 'Usuario'; // Intenta usar user.name si existe
-  const userRoleDisplay = user ? (user.role === 'gestora' ? 'Gestora Administrativa' : user.role) : 'Rol Desconocido'; // Muestra el rol o un texto descriptivo
+  // Obtener el nombre y rol del usuario desde userData
+  const userName = userData?.user?.email === 'admin@demo.com' ? 'Andreina Ustate' : (userData?.user?.nombre || 'Usuario');
+  const userRoleDisplay = userData?.user?.rol === 'gestora' ? 'Gestora Administrativa' : 
+                         userData?.user?.rol === 'consultor' ? 'Consultor' : 
+                         userData?.user?.rol === 'reclutador' ? 'Reclutador' : 'Usuario';
 
   return (
     <div className="dashboard-layout">
@@ -32,31 +33,33 @@ function DashboardLayout({ children }) {
 
       {/* El área de contenido principal */}
       <main className="dashboard-content">
-        {/* ==================================================== */}
         {/* Encabezado del Dashboard con nombre y botón de logout */}
-        {/* ==================================================== */}
         <header className="dashboard-header">
           <div className="user-info">
+            {/* Avatar con iniciales */}
+            <div className="user-avatar">
+              {userName !== 'Usuario' ? userName.split(' ').map(name => name[0]).join('').substring(0, 2).toUpperCase() : 'U'}
+            </div>
             {/* Muestra el nombre del usuario y su rol/descripción */}
-            <span className="user-name">{userName}</span>
-            <span className="user-role">{userRoleDisplay}</span>
-             {/* Aquí podrías añadir un icono de avatar si tuvieras uno */}
-             {/* <img src="/path/to/avatar.png" alt="Avatar" className="user-avatar" /> */}
+            <div className="user-details">
+              <span className="user-name">{userName}</span>
+              <span className="user-role">{userRoleDisplay}</span>
+            </div>
           </div>
           {/* Botón de Cerrar Sesión */}
-          <button className="logout-button" onClick={handleLogout} style={{ backgroundColor: colors.primary, color: 'white' }}>
+          <button className="logout-button" onClick={handleLogout} style={{ backgroundColor: colors.primary }}>
             Cerrar Sesión
           </button>
         </header>
-        {/* ==================================================== */}
 
         {/* El contenido específico de la página (Dashboard, Nueva Programación, etc.) se renderiza aquí */}
-        <div className="page-content"> {/* Añadimos un contenedor para el contenido de la página */}
-           {children}
+        <div className="page-content">
+          {children}
         </div>
       </main>
     </div>
   );
 }
 
+// Exporta el componente DashboardLayout como la exportación por defecto de este archivo
 export default DashboardLayout;
