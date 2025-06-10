@@ -1,0 +1,389 @@
+/* Variables CSS */
+:root {
+  --primary-color: #273474;
+  --secondary-color: #394a9e;
+  --accent-color: #e4022c;
+  --text-primary: #333;
+  --text-secondary: #666;
+  --border-color: #e0e0e0;
+  --background-color: #f8f9fa;
+  --card-background: #ffffff;
+  --success-color: #28a745;
+  --warning-color: #ffc107;
+  --danger-color: #dc3545;
+  
+  /* Sombras */
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.1);
+  
+  /* Espaciados */
+  --spacing-xs: 0.5rem;
+  --spacing-sm: 0.75rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+}
+
+/* Contenedor principal */
+.informe-container {
+  max-width: 1200px;
+  margin: var(--spacing-lg) auto;
+  padding: var(--spacing-lg);
+  background-color: var(--card-background);
+  border-radius: 12px;
+  box-shadow: var(--shadow-md);
+  font-family: 'Inter', Arial, sans-serif;
+}
+
+/* Encabezados */
+h2 {
+  color: var(--primary-color);
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: var(--spacing-md);
+  text-align: center;
+}
+
+h4 {
+  color: var(--secondary-color);
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin: var(--spacing-lg) 0 var(--spacing-md);
+  padding-bottom: var(--spacing-xs);
+  border-bottom: 2px solid var(--secondary-color);
+}
+
+/* Textos destacados */
+.fecha {
+  color: var(--accent-color);
+  font-weight: 600;
+  font-size: 1.1rem;
+  text-align: center;
+  margin-bottom: var(--spacing-md);
+}
+
+.programa {
+  text-align: center;
+  font-size: 1.2rem;
+  margin-bottom: var(--spacing-lg);
+}
+
+.resaltado {
+  color: var(--accent-color);
+  font-weight: 600;
+}
+
+/* Sección de información de ejecución */
+.info-ejecucion {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: var(--spacing-lg);
+  margin: var(--spacing-lg) 0;
+}
+
+.info-box {
+  background-color: var(--background-color);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: var(--spacing-lg);
+  box-shadow: var(--shadow-sm);
+  transition: all 0.3s ease;
+}
+
+.info-box:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.info-box h4 {
+  color: var(--primary-color);
+  margin-top: 0;
+  margin-bottom: var(--spacing-md);
+  text-align: center;
+}
+
+.info-box label {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: var(--spacing-sm);
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.info-box input {
+  margin-top: var(--spacing-xs);
+  padding: 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+}
+
+.info-box input:focus {
+  outline: none;
+  border-color: var(--secondary-color);
+  box-shadow: 0 0 0 3px rgba(57, 74, 158, 0.1);
+}
+
+/* Tablas */
+.seguimiento-table,
+.detalle-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin: var(--spacing-md) 0;
+  background-color: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.seguimiento-table th,
+.detalle-table th {
+  background-color: var(--primary-color);
+  color: white;
+  padding: var(--spacing-sm);
+  font-weight: 500;
+  text-align: left;
+  font-size: 0.9rem;
+}
+
+.seguimiento-table td,
+.detalle-table td {
+  padding: var(--spacing-sm);
+  border: 1px solid var(--border-color);
+  font-size: 0.9rem;
+}
+
+.seguimiento-table input,
+.detalle-table input {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+/* Responsividad mejorada */
+@media (max-width: 768px) {
+  /* Ajustes generales para tablas en móvil */
+  .seguimiento-table,
+  .detalle-table {
+    display: block;
+    width: 100%;
+  }
+
+  .seguimiento-table thead,
+  .detalle-table thead {
+    display: none; /* Ocultamos los encabezados originales */
+  }
+
+  .seguimiento-table tbody,
+  .detalle-table tbody,
+  .seguimiento-table tr,
+  .detalle-table tr {
+    display: block;
+    width: 100%;
+  }
+
+  .seguimiento-table td,
+  .detalle-table td {
+    display: flex;
+    padding: var(--spacing-sm);
+    border: none;
+    border-bottom: 1px solid var(--border-color);
+    align-items: center;
+    gap: var(--spacing-sm);
+  }
+
+  /* Agregamos los encabezados como pseudo-elementos */
+  .detalle-table td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: var(--primary-color);
+    min-width: 120px;
+    flex-shrink: 0;
+  }
+
+  /* Estilos específicos para la tabla de seguimiento */
+  .seguimiento-table tr {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: var(--spacing-xs);
+    padding: var(--spacing-xs);
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .seguimiento-table td {
+    text-align: center;
+    padding: var(--spacing-xs);
+    border: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .seguimiento-table td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: var(--primary-color);
+    margin-bottom: var(--spacing-xs);
+  }
+
+  /* Ajustes para inputs en tablas responsivas */
+  .seguimiento-table input,
+  .detalle-table input {
+    width: 100%;
+    min-width: unset;
+    padding: 0.75rem;
+  }
+
+  .detalle-table input[type="date"],
+  .detalle-table input[type="time"],
+  .detalle-table input[type="text"],
+  .detalle-table input[type="number"] {
+    width: 100%;
+    min-width: unset;
+  }
+
+  /* Separación entre filas */
+  .detalle-table tr {
+    padding: var(--spacing-sm) 0;
+    border-bottom: 2px solid var(--border-color);
+  }
+
+  .detalle-table tr:last-child {
+    border-bottom: none;
+  }
+}
+
+/* Mejoras táctiles específicas para inputs en móvil */
+@media (hover: none) {
+  .seguimiento-table input,
+  .detalle-table input,
+  select,
+  button {
+    min-height: 44px;
+    font-size: 16px !important;
+    padding: 0.75rem !important;
+  }
+}
+
+/* Detalles visuales */
+.detalle-visuales {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: var(--spacing-lg);
+  margin: var(--spacing-lg) 0;
+}
+
+.detalle-card {
+  background-color: white;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: var(--spacing-lg);
+  box-shadow: var(--shadow-sm);
+  transition: all 0.3s ease;
+}
+
+.detalle-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.detalle-col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.detalle-col p {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.detalle-col strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.detalle-col input,
+.detalle-col select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+}
+
+.detalle-col input:focus,
+.detalle-col select:focus {
+  outline: none;
+  border-color: var(--secondary-color);
+  box-shadow: 0 0 0 3px rgba(57, 74, 158, 0.1);
+}
+
+/* Sección de firmas */
+.firma-section {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: var(--spacing-xl);
+  margin-top: var(--spacing-xl);
+  padding-top: var(--spacing-lg);
+  border-top: 1px solid var(--border-color);
+}
+
+.firma-section div {
+  background-color: var(--background-color);
+  padding: var(--spacing-lg);
+  border-radius: 8px;
+  box-shadow: var(--shadow-sm);
+}
+
+.firma-section p {
+  margin: var(--spacing-xs) 0;
+  color: var(--text-primary);
+}
+
+.firma-section input[type="file"] {
+  width: 100%;
+  padding: var(--spacing-sm);
+  margin: var(--spacing-sm) 0;
+  border: 1px dashed var(--border-color);
+  border-radius: 6px;
+  background-color: white;
+}
+
+.programa-botones {
+  margin: 1rem 0;
+}
+
+.programa-botones button {
+  margin-right: 0.5rem;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  background-color: #f0f0f0;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.programa-botones .boton-activo {
+  background-color: #004080;
+  color: white;
+  border-color: #002050;
+}
+
+
+/* Animaciones */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.informe-container {
+  animation: fadeIn 0.3s ease;
+}
