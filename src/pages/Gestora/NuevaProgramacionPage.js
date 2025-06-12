@@ -7,9 +7,12 @@ import "./NuevaProgramacionPage.css";
 import { colors } from "../../colors";
 import * as XLSX from "xlsx";
 import apiService from "../../utils/api";
+import { useAuth } from "../../context/AuthContext"; // Importamos useAuth
+import NotificationService from '../../utils/notificationService';
 
 function NuevaProgramacionPage() {
   const navigate = useNavigate();
+  const { userData } = useAuth(); // Obtenemos userData del contexto
   
   // =========================================================================
   // Estados para modo edición
@@ -27,6 +30,7 @@ function NuevaProgramacionPage() {
   const [municipios, setMunicipios] = useState([]);
   const [contratos, setContratos] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [gestoraCedula, setGestoraCedula] = useState(null);
 
   // =========================================================================
   // Estados para el formulario
@@ -37,7 +41,10 @@ function NuevaProgramacionPage() {
   const [modalidadSeleccionada, setModalidadSeleccionada] = useState("");
   const [regionSeleccionada, setRegionSeleccionada] = useState("");
   const [municipioSeleccionado, setMunicipioSeleccionado] = useState("");
-  const [contratoSeleccionado, setContratoSeleccionado] = useState("");
+  const [contratoOAMP, setContratoOAMP] = useState("");
+  const [consultorSeleccionado, setConsultorSeleccionado] = useState(null);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
   // Campos comunes para ambos tipos
   const [tematica, setTematica] = useState("");
@@ -65,12 +72,6 @@ function NuevaProgramacionPage() {
   const [valorTotalPagar, setValorTotalPagar] = useState("");
   const [valorTotalCobrar, setValorTotalCobrar] = useState("");
 
-  // Estados para información del consultor seleccionado
-  const [consultorSeleccionado, setConsultorSeleccionado] = useState(null);
-
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
-
   // =========================================================================
   // Efectos para cargar datos de la base de datos
   // =========================================================================
@@ -78,40 +79,113 @@ function NuevaProgramacionPage() {
     const cargarDatosIniciales = async () => {
       try {
         setLoading(true);
+        setError(''); // Limpiar errores anteriores
         
-        const [
-          actividadesRes,
-          modalidadesRes,
-          programaRutasRes,
-          regionesRes,
-          contratosRes
-        ] = await Promise.all([
-          apiService.getActividades(),
-          apiService.getModalidades(),
-          apiService.getProgramaRutas(),
-          apiService.getRegiones(),
-          apiService.getContratos()
-        ]);
+        console.log('🔍 Iniciando carga de datos con userData:', userData);
+        
+        // Verificar si tenemos la información del usuario
+        if (!userData?.user?.id) {
+          console.error('❌ No se encontró información del usuario en userData:', userData);
+          setError('No se encontró información del usuario');
+          setLoading(false);
+          return;
+        }
 
-        if (actividadesRes.success) setActividades(actividadesRes.data.actividades);
-        if (modalidadesRes.success) setModalidades(modalidadesRes.data.modalidades);
-        if (programaRutasRes.success) setProgramas(programaRutasRes.data.programas);
-        if (regionesRes.success) setRegiones(regionesRes.data.regiones);
-        if (contratosRes.success) {
-          console.log('🔍 Contratos recibidos del backend:', contratosRes.data.contratos);
-          setContratos(contratosRes.data.contratos);
+        console.log('👤 ID del usuario encontrado:', userData.user.id);
+
+        // Obtener la información completa del usuario
+        try {
+          const userInfoResponse = await apiService.request(`/usuarios/${userData.user.id}`);
+          console.log('📋 Respuesta de información del usuario:', userInfoResponse);
+          
+          if (!userInfoResponse.success) {
+            console.error('❌ Error en la respuesta de usuarios:', userInfoResponse);
+            setError('Error obteniendo información del usuario: ' + (userInfoResponse.message || 'Error desconocido'));
+            setLoading(false);
+            return;
+          }
+
+          const cedula = userInfoResponse.data.usu_cedula;
+          console.log('🆔 Cédula obtenida:', cedula);
+          setGestoraCedula(cedula);
+
+          // Cargar todos los datos necesarios
+          console.log('📥 Iniciando carga de datos con cédula:', cedula);
+          
+          const [
+            actividadesRes,
+            modalidadesRes,
+            programaRutasRes,
+            regionesRes,
+            contratosRes
+          ] = await Promise.all([
+            apiService.getActividades(),
+            apiService.getModalidades(),
+            apiService.getProgramaRutas(),
+            apiService.getRegiones(),
+            apiService.getContratos(cedula)
+          ]);
+
+          console.log('📊 Resultados obtenidos:', {
+            actividades: actividadesRes,
+            modalidades: modalidadesRes,
+            programas: programaRutasRes,
+            regiones: regionesRes,
+            contratos: contratosRes
+          });
+
+          if (actividadesRes.success) {
+            console.log('✅ Actividades cargadas:', actividadesRes.data.actividades.length);
+            setActividades(actividadesRes.data.actividades);
+          } else {
+            console.error('❌ Error cargando actividades:', actividadesRes);
+          }
+
+          if (modalidadesRes.success) {
+            console.log('✅ Modalidades cargadas:', modalidadesRes.data.modalidades.length);
+            setModalidades(modalidadesRes.data.modalidades);
+          } else {
+            console.error('❌ Error cargando modalidades:', modalidadesRes);
+          }
+
+          if (programaRutasRes.success) {
+            console.log('✅ Programas cargados:', programaRutasRes.data.programas.length);
+            setProgramas(programaRutasRes.data.programas);
+          } else {
+            console.error('❌ Error cargando programas:', programaRutasRes);
+          }
+
+          if (regionesRes.success) {
+            console.log('✅ Regiones cargadas:', regionesRes.data.regiones.length);
+            setRegiones(regionesRes.data.regiones);
+          } else {
+            console.error('❌ Error cargando regiones:', regionesRes);
+          }
+
+          if (contratosRes.success) {
+            console.log('✅ Contratos cargados:', contratosRes.data.contratos.length);
+            setContratos(contratosRes.data.contratos);
+          } else {
+            console.error('❌ Error cargando contratos:', contratosRes);
+          }
+
+        } catch (userInfoError) {
+          console.error('❌ Error obteniendo información del usuario:', userInfoError);
+          setError('Error al obtener información del usuario: ' + (userInfoError.message || 'Error desconocido'));
+          setLoading(false);
+          return;
         }
 
       } catch (error) {
-        console.error('Error cargando datos:', error);
-        setError('Error cargando los datos iniciales');
+        console.error('❌ Error general cargando datos:', error);
+        setError('Error cargando los datos iniciales: ' + (error.message || 'Error desconocido'));
       } finally {
         setLoading(false);
       }
     };
 
     cargarDatosIniciales();
-  }, []);
+  }, [userData]);
 
   // Efecto para cargar municipios cuando cambia la región
   useEffect(() => {
@@ -174,8 +248,8 @@ function NuevaProgramacionPage() {
 
   // Efecto para establecer información del consultor en modo edición
   useEffect(() => {
-    if (isEditMode && contratoSeleccionado && contratos.length > 0 && !consultorSeleccionado) {
-      const contrato = contratos.find(c => c.oamp.toString() === contratoSeleccionado);
+    if (isEditMode && contratoOAMP && contratos.length > 0 && !consultorSeleccionado) {
+      const contrato = contratos.find(c => c.oamp.toString() === contratoOAMP);
       if (contrato) {
         const consultorData = {
           ...contrato,
@@ -189,7 +263,8 @@ function NuevaProgramacionPage() {
         console.log('📋 Consultor establecido en modo edición:', consultorData);
       }
     }
-  }, [isEditMode, contratoSeleccionado, contratos, consultorSeleccionado]);
+  }, [isEditMode, contratoOAMP, contratos, consultorSeleccionado]);
+  
 
   // Función para poblar el formulario con datos existentes (corregida)
   const poblarFormularioConDatos = (editInfo) => {
@@ -250,7 +325,7 @@ function NuevaProgramacionPage() {
         }
       }
       
-      setContratoSeleccionado(data.oamp?.toString() || '');
+      setContratoOAMP(data.oamp?.toString() || '');
       setTematica(data.pro_tematica || '');
       setMes(data.pro_mes || '');
       setFechaFormacion(formatearFecha(data.pro_fecha_formacion));
@@ -301,7 +376,7 @@ function NuevaProgramacionPage() {
         }
       }
       
-      setContratoSeleccionado(data.oamp?.toString() || '');
+      setContratoOAMP(data.oamp?.toString() || '');
       setTematica(data.proin_tematica || '');
       setMes(data.proin_mes || '');
       setFechaFormacion(formatearFecha(data.proin_fecha_formacion));
@@ -358,24 +433,14 @@ function NuevaProgramacionPage() {
     return programa ? programa.rutas : [];
   };
 
-  // Función helper para formatear nombres completos
+  // Función para formatear el nombre completo del consultor
   const formatearNombreCompleto = (contrato) => {
-    if (!contrato) return '';
-    
-    const nombres = [
-      contrato.usu_primer_nombre,
-      contrato.usu_segundo_nombre,
-      contrato.usu_primer_apellido,
-      contrato.usu_segundo_apellido
-    ].filter(Boolean); // Filtrar valores falsy (null, undefined, '')
-    
-    return nombres.join(' ');
+    return contrato.nombre_completo || 'Nombre no disponible';
   };
 
-  // Función helper para formatear nombre en dropdown
+  // Función para formatear el nombre en el dropdown
   const formatearNombreDropdown = (contrato) => {
-    const nombreCompleto = formatearNombreCompleto(contrato);
-    return `OAMP ${contrato.oamp} - ${nombreCompleto} (C.C. ${contrato.usu_cedula})`;
+    return `${contrato.oamp} - ${formatearNombreCompleto(contrato)}`;
   };
 
   const calcularValores = async () => {
@@ -457,39 +522,66 @@ function NuevaProgramacionPage() {
     return camposFaltantes;
   };
 
-  // Función para manejar selección de contrato
-  const handleContratoChange = (contratoId) => {
-    setContratoSeleccionado(contratoId);
+  // Función para manejar el cambio de contrato
+  const handleContratoChange = async (contratoId) => {
+    console.log('🔄 Contrato seleccionado:', contratoId);
     
-    // Buscar y establecer información del consultor
-    const contrato = contratos.find(c => c.oamp.toString() === contratoId);
-    if (contrato) {
-      // Sanitizar los datos para manejar valores null/undefined
-      const consultorData = {
-        ...contrato,
-        usu_segundo_nombre: contrato.usu_segundo_nombre || '',
-        usu_telefono: contrato.usu_telefono || 'No especificado',
-        usu_direccion: contrato.usu_direccion || 'No especificada',
-        are_descripcion: contrato.are_descripcion || 'No especificada'
-      };
+    // Limpiar el estado anterior
+    setContratoOAMP(contratoId);
+    
+    if (!contratoId) {
+      setConsultorSeleccionado(null);
+      return;
+    }
+    
+    try {
+      // Encontrar el contrato seleccionado
+      const contratoSeleccionado = contratos.find(c => c.oamp === parseInt(contratoId));
       
-      setConsultorSeleccionado(consultorData);
-      
-      // Verificar completitud de datos
-      const camposFaltantes = verificarCompleitudDatos(consultorData);
-      if (camposFaltantes.length > 0) {
-        console.warn('⚠️ Campos faltantes en el consultor:', camposFaltantes);
-        // Opcional: mostrar alerta no intrusiva
-        setTimeout(() => {
-          if (window.confirm(`Algunos datos del consultor están incompletos:\n• ${camposFaltantes.join('\n• ')}\n\n¿Desea continuar de todas formas?`)) {
-            console.log('✅ Usuario decidió continuar con datos incompletos');
-          }
-        }, 500);
+      if (contratoSeleccionado) {
+        console.log('📋 Datos del contrato:', contratoSeleccionado);
+        
+        // Obtener información adicional del usuario usando la ruta de debug
+        const userInfoResponse = await apiService.request(`/programaciones/debug-consultor/${contratoSeleccionado.usu_cedula}`);
+        console.log('👤 Información adicional del usuario:', userInfoResponse);
+        
+        if (userInfoResponse.success && userInfoResponse.data.consultor) {
+          const userInfo = userInfoResponse.data.consultor;
+          
+          // Actualizar la información del consultor seleccionado con todos los campos necesarios
+          setConsultorSeleccionado({
+            ...contratoSeleccionado,
+            cedula: contratoSeleccionado.usu_cedula,
+            nombre_completo: formatearNombreCompleto(contratoSeleccionado),
+            usu_telefono: userInfo.usu_telefono || 'No especificado',
+            usu_direccion: userInfo.usu_direccion || 'No especificada',
+            areaConocimiento: userInfo.are_descripcion || contratoSeleccionado.are_descripcion || 'No especificada',
+            oamp_valor_total: contratoSeleccionado.oamp_valor_total || 0,
+            oamp_fecha_generacion: contratoSeleccionado.oamp_fecha_generacion || 'Invalid Date'
+          });
+        } else {
+          console.warn('⚠️ No se encontró información adicional del usuario');
+          // Usar solo la información del contrato
+          setConsultorSeleccionado({
+            ...contratoSeleccionado,
+            cedula: contratoSeleccionado.usu_cedula,
+            nombre_completo: formatearNombreCompleto(contratoSeleccionado),
+            usu_telefono: 'No especificado',
+            usu_direccion: 'No especificada',
+            areaConocimiento: contratoSeleccionado.are_descripcion || 'No especificada',
+            oamp_valor_total: contratoSeleccionado.oamp_valor_total || 0,
+            oamp_fecha_generacion: contratoSeleccionado.oamp_fecha_generacion || 'Invalid Date'
+          });
+          setError('Advertencia: Algunos datos del consultor no están disponibles en el sistema.');
+        }
+      } else {
+        console.error('❌ No se encontró el contrato:', contratoId);
+        setError('Error al seleccionar el contrato');
+        setConsultorSeleccionado(null);
       }
-      
-      // Debug: mostrar datos en consola
-      console.log('🔍 Consultor seleccionado:', consultorData);
-    } else {
+    } catch (error) {
+      console.error('❌ Error al procesar la selección del contrato:', error);
+      setError('Error al procesar la información del consultor');
       setConsultorSeleccionado(null);
     }
   };
@@ -529,7 +621,7 @@ function NuevaProgramacionPage() {
         pr_id: parseInt(rutaSeleccionada),
         act_id: parseInt(actividadSeleccionada),
         mod_id: parseInt(modalidadSeleccionada),
-        oamp: parseInt(contratoSeleccionado),
+        oamp: parseInt(contratoOAMP),
         val_reg_id: valRegId,
         pro_codigo_agenda: parseInt(codigoAgenda),
         pro_mes: mes,
@@ -657,6 +749,34 @@ function NuevaProgramacionPage() {
     }
   };
 
+  // Componente para mostrar errores
+  const ErrorMessage = ({ message }) => (
+    <div style={{ 
+      color: '#721c24',
+      backgroundColor: '#f8d7da',
+      border: '1px solid #f5c6cb',
+      padding: '10px',
+      borderRadius: '4px',
+      marginBottom: '20px'
+    }}>
+      <strong>Error:</strong> {message}
+    </div>
+  );
+
+  // Componente para mostrar mensajes de éxito
+  const SuccessMessage = ({ message }) => (
+    <div style={{ 
+      color: '#155724',
+      backgroundColor: '#d4edda',
+      border: '1px solid #c3e6cb',
+      padding: '10px',
+      borderRadius: '4px',
+      marginBottom: '20px'
+    }}>
+      {message}
+    </div>
+  );
+
   // =========================================================================
   // Renderizado del componente
   // =========================================================================
@@ -695,17 +815,9 @@ function NuevaProgramacionPage() {
           </Link>
         </div>
 
-        {error && (
-          <div className="alert alert-error">
-            {error}
-        </div>
-        )}
-
-        {success && (
-          <div className="alert alert-success">
-            {success}
-          </div>
-        )}
+        {/* Mostrar mensajes de error o éxito */}
+        {error && <ErrorMessage message={error} />}
+        {success && <SuccessMessage message={success} />}
 
         <form onSubmit={handleSubmit} className="programacion-form">
           {/* Sección 1: Tipo de Actividad */}
@@ -796,7 +908,7 @@ function NuevaProgramacionPage() {
                   <label htmlFor="contrato">Contrato OAMP *</label>
                     <select
                     id="contrato"
-                    value={contratoSeleccionado}
+                    value={contratoOAMP}
                     onChange={(e) => handleContratoChange(e.target.value)}
                       required
                     >
@@ -1044,11 +1156,11 @@ function NuevaProgramacionPage() {
                     onChange={(e) => setRegionSeleccionada(e.target.value)}
                   >
                     <option value="">Sin región específica</option>
-                                        {regiones.map((region) => (
+                    {regiones.map((region) => (
                       <option key={region.reg_id} value={region.reg_id}>
                         Región {region.reg_id}
-                    </option>
-                  ))}
+    </option>
+  ))}
 </select>
                   </div>
 
@@ -1155,75 +1267,77 @@ function NuevaProgramacionPage() {
                   🔍 Debug Datos
                 </button>
               </div>
-                <div className="form-grid">
-                  <div className="form-group">
+              <div className="form-grid">
+                <div className="form-group">
                   <label>Nombres Completos</label>
-                    <input
+                  <input
                     type="text" 
-                    value={formatearNombreCompleto(consultorSeleccionado)} 
+                    value={consultorSeleccionado.nombre_completo || 'Nombre no disponible'} 
                     readOnly 
-                    style={{ backgroundColor: formatearNombreCompleto(consultorSeleccionado) ? '#e3f2fd' : '#ffebee' }}
-                    />
-                  </div>
+                    style={{ backgroundColor: consultorSeleccionado.nombre_completo ? '#e3f2fd' : '#ffebee' }}
+                  />
+                </div>
 
-                  <div className="form-group">
+                <div className="form-group">
                   <label>Cédula</label>
-                    <input
+                  <input
                     type="text" 
-                    value={consultorSeleccionado.usu_cedula || 'No disponible'} 
-                      readOnly
-                    />
-                  </div>
+                    value={consultorSeleccionado.cedula || 'No disponible'} 
+                    readOnly
+                  />
+                </div>
 
-                  <div className="form-group">
+                <div className="form-group">
                   <label>Teléfono</label>
-                    <input
-                      type="text"
+                  <input
+                    type="text"
                     value={consultorSeleccionado.usu_telefono} 
-                      readOnly
+                    readOnly
                     style={{ backgroundColor: consultorSeleccionado.usu_telefono === 'No especificado' ? '#fff3e0' : '#e3f2fd' }}
-                    />
-                  </div>
+                  />
+                </div>
 
-                    <div className="form-group">
+                <div className="form-group">
                   <label>Dirección</label>
-                      <input
-                        type="text"
+                  <input
+                    type="text"
                     value={consultorSeleccionado.usu_direccion} 
-                        readOnly
+                    readOnly
                     style={{ backgroundColor: consultorSeleccionado.usu_direccion === 'No especificada' ? '#fff3e0' : '#e3f2fd' }}
-                      />
-                    </div>
+                  />
+                </div>
 
                 <div className="form-group full-width">
                   <label>Área de Conocimiento</label>
-                    <input
-                      type="text"
-                    value={consultorSeleccionado.are_descripcion} 
+                  <input
+                    type="text"
+                    value={consultorSeleccionado.areaConocimiento} 
                     readOnly 
-                    style={{ backgroundColor: consultorSeleccionado.are_descripcion === 'No especificada' ? '#fff3e0' : '#e3f2fd' }}
-                    />
-                  </div>
+                    style={{ backgroundColor: consultorSeleccionado.areaConocimiento === 'No especificada' ? '#fff3e0' : '#e3f2fd' }}
+                  />
+                </div>
 
-                  <div className="form-group">
+                <div className="form-group">
                   <label>Valor Total del Contrato</label>
-                    <input
-                      type="text"
+                  <input
+                    type="text"
                     value={`$${parseInt(consultorSeleccionado.oamp_valor_total || 0).toLocaleString()}`} 
-                      readOnly
-                    />
-                  </div>
+                    readOnly
+                  />
+                </div>
 
-                  <div className="form-group">
+                <div className="form-group">
                   <label>Fecha Generación Contrato</label>
-                    <input
-                      type="text"
-                    value={new Date(consultorSeleccionado.oamp_fecha_generacion).toLocaleDateString('es-CO')} 
+                  <input
+                    type="text"
+                    value={consultorSeleccionado.oamp_fecha_generacion !== 'Invalid Date' ? 
+                      new Date(consultorSeleccionado.oamp_fecha_generacion).toLocaleDateString('es-CO') : 
+                      'Fecha no disponible'} 
                     readOnly 
-                    />
-                  </div>
-                  </div>
-                  </div>
+                  />
+                </div>
+              </div>
+            </div>
           )}
 
           {/* Botón de envío */}

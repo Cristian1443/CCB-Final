@@ -6,15 +6,18 @@ import ConsultorLayout from '../../components/ConsultorLayout';
 // Ruta para el CSS de esta página
 import '../../styles/consultor-profile.css';
 // Importa tu hook de autenticación si necesitas el ID del consultor para cargar su perfil
-// import { useAuth } = '../../context/AuthContext';
+import { useAuth } from '../../context/AuthContext';
 
 moment.locale('es');
 
 const ConsultorProfilePage = () => {
-  // const { currentUser } = useAuth(); // Obtener el usuario actual para cargar su perfil
+  const { userData } = useAuth();
   const [consultorProfile, setConsultorProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Obtener el email del usuario actual desde el contexto de autenticación
+  const currentUserEmail = userData?.user?.email;
 
   useEffect(() => {
     // TODO: Implementar la carga real del perfil del consultor
@@ -37,24 +40,41 @@ const ConsultorProfilePage = () => {
         await new Promise(resolve => setTimeout(resolve, 500));
 
         // Datos mock (simulados) para el perfil del consultor con los campos solicitados
-        const mockProfile = {
-            id: 'consultor-123', // Este es el ID interno, no necesariamente el N° CONSULTOR
-            nroConsultor: 'CCB-001-2025', // <-- Nuevo campo: N° CONSULTOR
-            nombreCompleto: 'Carlos Alberto Rojas García', // Ya existente
-            cedula: '123.456.789-0', // Ya existente
-            email: 'carlos.rojas@example.com',
-            celular: '+57 300 123 4567',
-            direccion: 'Calle 10 # 20-30, Bogotá D.C.',
+        const mockProfiles = {
+          'consultor1@demo.com': {
+            id: '1234567890',
+            nroConsultor: 'CCB-001-2025',
+            nombreCompleto: 'Juan Carlos Pérez',
+            cedula: '1234567890',
+            email: 'consultor1@demo.com',
+            celular: '+57 315 789 4561',
+            direccion: 'Calle 72 #10-34, Bogotá D.C.',
             tipoVinculacion: 'Contrato de Prestación de Servicios',
-            consecutivoOAMP: 'OAMP-2025-001', // <-- Renombrado de nroOAMPConsultor
-            fechaFirmaOAMP: moment('2025-01-01').toDate(), // <-- Renombrado de fechaInicioOAMPConsultor
-            areaConocimiento: 'Innovación y Design Thinking', // <-- Renombrado de especialidad
-            experiencia: '10 años de experiencia en consultoría empresarial y desarrollo de proyectos.',
-            fotoPerfilUrl: 'https://placehold.co/150x150/aabbcc/ffffff?text=Foto', // Placeholder para la foto
-            // Puedes añadir más campos relevantes al perfil aquí
+            consecutivoOAMP: 'OAMP-2025-023',
+            fechaFirmaOAMP: moment('2025-03-15').toDate(),
+            areaConocimiento: 'Marketing digital, Estrategia empresarial, Desarrollo de negocios',
+            experiencia: '10 años de experiencia en consultoría de marketing digital y estrategia empresarial.',
+            fotoPerfilUrl: 'https://placehold.co/150x150/aabbcc/ffffff?text=JCP',
+          },
+          'consultor2@demo.com': {
+            id: '1018425430',
+            nroConsultor: 'CCB-002-2025',
+            nombreCompleto: 'Adriana Marcela Díaz Jaime',
+            cedula: '1018425430',
+            email: 'consultor2@demo.com',
+            celular: '+57 301 234 5678',
+            direccion: 'Carrera 15 #85-30, Bogotá D.C.',
+            tipoVinculacion: 'Contrato de Prestación de Servicios',
+            consecutivoOAMP: 'OAMP-2025-024',
+            fechaFirmaOAMP: moment('2025-04-09').toDate(),
+            areaConocimiento: 'Finanzas corporativas, Proyecciones financieras, construcción y análisis de indicadores financieros',
+            experiencia: '8 años de experiencia en consultoría financiera y desarrollo de proyectos empresariales.',
+            fotoPerfilUrl: 'https://placehold.co/150x150/aabbcc/ffffff?text=AMD',
+          }
         };
 
-        setConsultorProfile(mockProfile);
+        // Simular obtener el email del usuario actual
+        setConsultorProfile(mockProfiles[currentUserEmail]);
       } catch (err) {
         setError('Hubo un error al cargar la información del perfil.');
         console.error('Error fetching consultant profile:', err);

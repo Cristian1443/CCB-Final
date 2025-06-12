@@ -5,6 +5,7 @@ import EventItem from '../../components/EventItem';
 import './EventListPage.css';
 import { FaPlus, FaArrowLeft, FaSync, FaFilter } from 'react-icons/fa';
 import apiService from '../../utils/api';
+import { useAuth } from '../../context/AuthContext';
 
 function EventListPage() {
   const [events, setEvents] = useState([]);
@@ -33,6 +34,7 @@ function EventListPage() {
   });
 
   const navigate = useNavigate();
+  const { userData, loading: authLoading } = useAuth();
 
   // Detectar cambios en el tamaño de la pantalla
   useEffect(() => {
@@ -46,11 +48,13 @@ function EventListPage() {
 
   // Cargar datos iniciales
   useEffect(() => {
-    loadAllData();
-  }, []);
+    if (!authLoading && userData && userData.user && userData.user.usu_cedula) {
+      loadAllData(userData.user.usu_cedula);
+    }
+  }, [userData, authLoading]);
 
   // Función para cargar todos los datos
-  const loadAllData = async () => {
+  const loadAllData = async (gestoraCedula) => {
     try {
       setLoading(true);
       setError(null);
@@ -61,7 +65,7 @@ function EventListPage() {
         modalidadesRes,
         programasRes
       ] = await Promise.all([
-        apiService.getProgramaciones(),
+        apiService.getProgramaciones({ gestoraCedula }),
         apiService.getModalidades(),
         apiService.getProgramaRutas()
       ]);

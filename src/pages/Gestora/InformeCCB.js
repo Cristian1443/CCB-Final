@@ -1,41 +1,78 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import DashboardLayout from '../../components/DashboardLayout';
 import './InformeCCB.css';
 
 function InformeCCB() {
   const programas = [
-    { nombre: 'Internacionalización'},
-    { nombre: 'Crecimiento Empresarial'},
-    { nombre: 'Emprendimiento' },
-    {nombre: 'Consolidacion y Escalamiento Empresarial'}
+    {
+      nombre: 'Internacionalización',
+      sectores: ['Economia popular']
+    },
+    {
+      nombre: 'Emprendimiento, Ruta Bogotá/Cundinamarca Emprende, Innovación',
+      sectores: ['INNOVACION', 'EMPRENDIMIENTO ']
+    },
+    {
+      nombre: 'Consolidación y escalamiento empresarial',
+      sectores: ['Estrategia Financiera y Rendición de Cuentas para el Sector Moda e Industrias Creativas y Culturales', 'Fortalecimiento de Equipos de Venta para el Sector Moda', 'PROGRAMACION ABIERTA Y REGION', 'Gestión del Talento Humano para el sector construcción', 'Excelencia para el sector Turismo', 'Proyectos financieros con proposito y Gestion financiera en empresas de servicios empresariales', 'Transformación digital', 'Tecnología en modelos de negocio y servicios de Consultoria', 'Tecnología en Cadena de abastecimiento - (Logistica)', 'Programa de Desarrollo proveedores', 'Marketing Experiencial', 'Inteligencia Artificial', 'Fidelización y atracción del Talento Humano', 'Indicadores de gestión', 'Metodologias de mejoramiento de la Productividad', 'Gestión Finaciero', 'Talleres', 'Asesorias individales', 'INTERNACIONALIZACION - Entregable -  Preseleccion de mercado', 'INTERNACIONALIZACION - Entregable -  MarketFit', 'INTERNACIONALIZACION - Entregable -  One Pager']
+    },
+    {
+      nombre: 'Foro presidentes',
+      sectores: ['ESCUELA DE MENTORES']
+    }
   ];
 
   const [programaSeleccionado, setProgramaSeleccionado] = useState(programas[0]);
+  const [sectorSeleccionado, setSectorSeleccionado] = useState(null);
+
   return (
     <DashboardLayout>
-       {/* Botones para elegir programa */}
-        <div className="programa-botones">
-          {programas.map((programa) => (
+      {/* Botones para elegir programa */}
+      <div className="programa-botones">
+        {programas.map((programa) => (
+          <button
+            key={programa.nombre}
+            className={programaSeleccionado.nombre === programa.nombre ? 'boton-activo' : ''}
+            onClick={() => {
+              setProgramaSeleccionado(programa);
+              setSectorSeleccionado(null);
+            }}
+          >
+            {programa.nombre}
+          </button>
+        ))}
+      </div>
+
+      {/* Botones para elegir sector si hay programa seleccionado */}
+      {programaSeleccionado.sectores && (
+        <div className="sector-botones">
+          {programaSeleccionado.sectores.map((sector) => (
             <button
-              key={programa.nombre}
-              className={programaSeleccionado.nombre === programa.nombre ? 'boton-activo' : ''}
-              onClick={() => setProgramaSeleccionado(programa)}
+              key={sector}
+              className={sectorSeleccionado === sector ? 'boton-activo' : ''}
+              onClick={() => setSectorSeleccionado(sector)}
             >
-              {programa.nombre}
+              {sector}
             </button>
           ))}
         </div>
+      )}
+
       <div className="informe-container">
         <h2>INFORME CONTRATO</h2>
         <p className="fecha">
-  {new Date().toLocaleDateString('es-ES', { month: 'long', year: 'numeric' }).toUpperCase()}
-</p>
+          {new Date().toLocaleDateString('es-ES', { month: 'long', year: 'numeric' }).toUpperCase()}
+        </p>
 
+        <p className="programa">
+          PROGRAMA DE <span className="resaltado">{programaSeleccionado.nombre.toUpperCase()}</span>
+          {sectorSeleccionado && (
+            <> - SECTOR <span className="resaltado">{sectorSeleccionado.toUpperCase()}</span></>
+          )}
+        </p>
 
-        <p className="programa">PROGRAMA DE <span className="resaltado">{programaSeleccionado.nombre.toUpperCase()}</span></p>
-        
         <p><strong>NIT:</strong> 830084876 - 6</p>
-        <p>Prestó los servicios de asesoría individual y talleres en el programa de <span className="resaltado">{programaSeleccionado.nombre}</span>, como se relaciona a continuación:</p>
+        <p>Prestó los servicios de asesoría individual y talleres en el programa de <span className="resaltado">{programaSeleccionado.nombre}</span>{sectorSeleccionado && <> - <span className="resaltado">{sectorSeleccionado}</span></>}, como se relaciona a continuación:</p>
 
         <div className="info-ejecucion">
           <div className="info-box">
@@ -84,7 +121,12 @@ function InformeCCB() {
         {/* Secciones adicionales como asesorías, talleres, firmas, etc. vendrán después */}
         {/* ASESORÍAS INDIVIDUALES */}
         <h4>ASESORÍAS INDIVIDUALES</h4>
-        <p> Durante el mes, en total se prestaron <span className="resaltado">9 horas</span> de asesoría individual en el marco del desarrollo del programa de <span className="resaltado">{programaSeleccionado.nombre}</span> de la Cámara de Comercio de Bogotá, como se detalla a continuación:</p>
+        <p>
+  Durante el mes, en total se prestaron <span className="resaltado">28 horas</span> de <span className="resaltado">asesoría individual </span>
+  en el marco del desarrollo del programa de{' '}
+  <span className="resaltado">{programaSeleccionado.nombre}</span>{sectorSeleccionado && <> - <span className="resaltado">{sectorSeleccionado}</span></>} de la Cámara de Comercio de Bogotá, como se detalla a continuación:
+</p>
+
         <div className="table-container">
           <table className="detalle-table">
             <thead>
@@ -116,7 +158,7 @@ function InformeCCB() {
 
         {/* TALLERES */}
         <h4>TALLERES, ASESORÍAS GRUPALES O CÁPSULA</h4>
-        <p>Durante el mes, en total se prestaron <span className="resaltado">28 horas</span> de <span className="resaltado">talleres</span> en el marco del desarrollo del programa de <span className="resaltado">{programaSeleccionado.nombre}</span> de la Cámara de Comercio de Bogotá, como se detalla a continuación:</p>
+        <p>Durante el mes, en total se prestaron <span className="resaltado">28 horas</span> de <span className="resaltado">talleres</span> en el marco del desarrollo del programa de <span className="resaltado">{programaSeleccionado.nombre}</span>{sectorSeleccionado && <> - <span className="resaltado">{sectorSeleccionado}</span></>} de la Cámara de Comercio de Bogotá, como se detalla a continuación:</p>
         <div className="table-container">
           <table className="detalle-table">
             <thead>

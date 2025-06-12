@@ -48,8 +48,11 @@ router.post('/login', [
 
     // Buscar usuario en la base de datos por email
     const result = await executeQuery(
-      'SELECT usu_id, usu_correo, usu_contraseña, usu_tipo, usu_activo FROM cuentas WHERE usu_correo = ? AND usu_activo = 1',
-      [username] // username será el email
+      `SELECT c.usu_id, c.usu_correo, c.usu_contraseña, c.usu_tipo, c.usu_activo, ui.usu_cedula
+       FROM cuentas c
+       LEFT JOIN usuarios_info ui ON c.usu_id = ui.usu_id
+       WHERE c.usu_correo = ? AND c.usu_activo = 1`,
+      [username]
     );
 
     if (!result.success || result.data.length === 0) {
@@ -119,10 +122,11 @@ router.post('/login', [
         token,
         user: {
           id: user.usu_id,
-          username: user.usu_correo, // Usar email como username
+          username: user.usu_correo,
           email: user.usu_correo,
           rol: mappedRole,
-          tipo_original: user.usu_tipo
+          tipo_original: user.usu_tipo,
+          usu_cedula: user.usu_cedula
         },
         ...additionalData
       }
@@ -190,25 +194,27 @@ router.post('/logout', authenticateToken, async (req, res) => {
 // GET /api/auth/me - Obtener información del usuario actual
 router.get('/me', authenticateToken, async (req, res) => {
   try {
-    let additionalData = {};
-    
-    if (req.user.rol === 'consultor') {
-      // Obtener información completa del usuario desde la BD
-      const userResult = await executeQuery(
-        'SELECT usu_id, usu_correo, usu_tipo, usu_fecha_registro FROM cuentas WHERE usu_id = ?',
-        [req.user.id]
-      );
-      
-      if (userResult.success && userResult.data.length > 0) {
-        additionalData.consultorInfo = userResult.data[0];
-      }
+    // Obtener la cédula desde usuarios_info
+    const userResult = await executeQuery(
+      `SELECT c.usu_id, c.usu_correo, c.usu_tipo, ui.usu_cedula
+       FROM cuentas c
+       LEFT JOIN usuarios_info ui ON c.usu_id = ui.usu_id
+       WHERE c.usu_id = ?`,
+      [req.user.id]
+    );
+
+    let user = req.user;
+    if (userResult.success && userResult.data.length > 0) {
+      user = {
+        ...user,
+        usu_cedula: userResult.data[0].usu_cedula
+      };
     }
 
     res.json({
       success: true,
       data: {
-        user: req.user,
-        ...additionalData
+        user
       }
     });
   } catch (error) {

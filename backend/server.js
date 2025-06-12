@@ -13,6 +13,8 @@ const pagosRoutes = require('./routes/pagos');
 const evidenciasRoutes = require('./routes/evidencias');
 const vacantesRoutes = require('./routes/vacantes');
 const programacionesRoutes = require('./routes/programaciones');
+const gestorasRoutes = require('./routes/gestoras');
+const usuariosRoutes = require('./routes/usuarios');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -40,6 +42,8 @@ app.use('/api/pagos', pagosRoutes);
 app.use('/api/evidencias', evidenciasRoutes);
 app.use('/api/vacantes', vacantesRoutes);
 app.use('/api/programaciones', programacionesRoutes);
+app.use('/api/gestoras', gestorasRoutes);
+app.use('/api/usuarios', usuariosRoutes);
 
 // Ruta de prueba
 app.get('/api/health', (req, res) => {

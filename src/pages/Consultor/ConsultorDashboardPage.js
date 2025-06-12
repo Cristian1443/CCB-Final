@@ -7,35 +7,49 @@ import CustomConsultorCalendar from '../../components/CustomConsultorCalendar';
 import './ConsultorDashboardPage.css';
 // Importa tu hook de autenticación si necesitas obtener el ID del consultor para filtrar eventos
 // Asegúrate de que la ruta a tu AuthContext sea correcta desde src/pages/Consultor/
-// import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../context/AuthContext';
 import moment from 'moment'; // Importar moment para manejar fechas y formato
+import NotificationService from '../../utils/notificationService';
 
 const ConsultorDashboardPage = () => {
-  // const { currentUser } = useAuth(); // Obtener el usuario actual para filtrar eventos
+  const { userData } = useAuth();
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   // Estado para el evento seleccionado. Será null si el modal está cerrado.
   const [selectedEvent, setSelectedEvent] = useState(null);
+  const [notifications, setNotifications] = useState([]);
+  const [notificationsLoaded, setNotificationsLoaded] = useState(false);
 
+  // Efecto para cargar y actualizar notificaciones
   useEffect(() => {
-    // Función para cargar los eventos del consultor
+    const loadNotifications = () => {
+      if (userData?.user?.email) {
+        console.log('📧 Cargando notificaciones para:', userData.user.email);
+        const userNotifications = NotificationService.getNotifications(userData.user.email);
+        console.log('📬 Notificaciones cargadas:', userNotifications);
+        setNotifications(userNotifications);
+        setNotificationsLoaded(true);
+      }
+    };
+
+    // Cargar notificaciones inicialmente
+    loadNotifications();
+
+    // Configurar un intervalo para actualizar las notificaciones
+    const interval = setInterval(loadNotifications, 30000); // Actualizar cada 30 segundos
+
+    return () => clearInterval(interval);
+  }, [userData?.user?.email]);
+
+  // Efecto para actualizar eventos cuando cambian las notificaciones
+  useEffect(() => {
     const fetchConsultorEvents = async () => {
+      if (!notificationsLoaded) return;
+
       setLoading(true);
       setError(null);
       try {
-        // TODO: Aquí deberías hacer la llamada a tu API para obtener los eventos del consultor
-        // Puedes usar el ID del consultor de currentUser para filtrar
-        // const consultorId = currentUser?.id;
-        // const response = await fetch(`/api/events?consultorId=${consultorId}`);
-        // if (!response.ok) throw new Error('Error al cargar los eventos');
-        // const data = await response.json();
-        // setEvents(data.map(event => ({
-        //    ...event,
-        //    start: new Date(event.start), // Convertir strings de fecha a objetos Date
-        //    end: new Date(event.end),
-        // })));
-
         // Datos mock (simulados) por ahora, con más campos
         // Asegúrate de que las fechas sean objetos Date
         const mockEvents = [
@@ -121,23 +135,58 @@ const ConsultorDashboardPage = () => {
           },
           // Puedes añadir más eventos mock aquí con la estructura completa
         ];
-        setEvents(mockEvents);
+
+        // Convertir notificaciones a eventos
+        const notificationEvents = notifications
+          .filter(n => n.type === 'nueva_programacion')
+          .map(n => ({
+            id: n.id,
+            title: n.title,
+            start: moment(n.data.fecha + 'T' + n.data.horaInicio).toDate(),
+            end: moment(n.data.fecha + 'T' + n.data.horaInicio).add(2, 'hours').toDate(),
+            description: n.message,
+            programa: n.data.programa,
+            tipoActividad: n.data.tipoActividad,
+            modalidad: n.data.modalidad,
+            ubicacion: n.data.direccion,
+            enlaceVirtual: n.data.enlace,
+            tematica: n.data.tematica,
+            estadoActividad: 'Pendiente',
+            coordinadorCCB: n.data.coordinadorCCB,
+            isNew: !n.read,
+            source: 'notification'
+          }));
+
+        console.log('🗓️ Eventos de notificaciones:', notificationEvents);
+
+        // Combinar con eventos existentes
+        const allEvents = [...mockEvents, ...notificationEvents];
+        console.log('📅 Total de eventos:', allEvents.length);
+        setEvents(allEvents);
       } catch (err) {
         setError('Hubo un error al cargar los eventos.');
-        console.error('Error fetching events:', err);
+        console.error('❌ Error cargando eventos:', err);
       } finally {
         setLoading(false);
       }
     };
 
     fetchConsultorEvents();
-  }, [/* currentUser?.id */]); // Dependencia si filtras por consultor
+  }, [notifications, notificationsLoaded]);
 
-  // Función para manejar cuando se selecciona un evento en el calendario
+  // Función para manejar cuando se selecciona un evento
   const handleSelectEvent = (event) => {
-    console.log("Evento seleccionado:", event); // <-- DEBUG: Muestra el evento seleccionado
-    setSelectedEvent(event); // Establece el evento seleccionado para mostrar el modal
-    console.log("Estado selectedEvent actualizado:", event); // <-- DEBUG: Confirma la actualización del estado
+    console.log("🎯 Evento seleccionado:", event);
+    setSelectedEvent(event);
+    
+    // Si el evento viene de una notificación, marcarlo como leído
+    if (event.source === 'notification' && event.isNew && userData?.user?.email) {
+      console.log('✓ Marcando notificación como leída:', event.id);
+      NotificationService.markAsRead(userData.user.email, event.id);
+      // Actualizar las notificaciones
+      const userNotifications = NotificationService.getNotifications(userData.user.email);
+      setNotifications(userNotifications);
+    }
   };
 
   // Función para cerrar el modal de detalles
@@ -153,6 +202,28 @@ const ConsultorDashboardPage = () => {
     <ConsultorLayout> {/* Usar el layout específico del consultor */}
       <div className="consultor-dashboard-container">
         <h2>Mi Calendario de Eventos</h2>
+
+        {/* Panel de Notificaciones */}
+        {notifications.length > 0 && (
+          <div className="notifications-panel">
+            <h3>Notificaciones</h3>
+            <div className="notifications-list">
+              {notifications.map(notification => (
+                <div 
+                  key={notification.id} 
+                  className={`notification-item ${notification.read ? '' : 'unread'}`}
+                >
+                  <div className="notification-title">{notification.title}</div>
+                  <div className="notification-message">{notification.message}</div>
+                  <div className="notification-timestamp">
+                    {moment(notification.timestamp).fromNow()}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {loading && <p className="loading-message">Cargando eventos...</p>}
         {error && <p className="error-message">{error}</p>}
         {!loading && !error && (
@@ -188,6 +259,7 @@ const ConsultorDashboardPage = () => {
               <p><strong>Coordinador CCB:</strong> {selectedEvent.coordinadorCCB}</p>
               <p><strong>Código Agenda:</strong> {selectedEvent.codigoAgenda}</p>
               <p><strong>Dependencia:</strong> {selectedEvent.dependencia}</p>
+              <p><strong>Gestora:</strong> {selectedEvent.gestora}</p>
 
               <h4>Información del Consultor</h4>
               <p><strong>Nombre:</strong> {selectedEvent.nombreConsultor}</p>

@@ -201,45 +201,67 @@ router.get('/municipios/:regionId', authenticateToken, async (req, res) => {
 // GET /api/programaciones/contratos - Obtener contratos disponibles
 router.get('/contratos', authenticateToken, async (req, res) => {
   try {
+    const { gestoraCedula } = req.query;
+
+    // Si no se proporciona cédula de gestora, retornar error
+    if (!gestoraCedula) {
+      return res.status(400).json({
+        success: false,
+        message: 'La cédula de la gestora es requerida',
+        error: 'MISSING_GESTORA'
+      });
+    }
+
+    // Consulta que une gestora_consultores con contratos y usuarios_info
     const result = await executeQuery(`
-      SELECT 
+      SELECT DISTINCT
         c.oamp,
         c.oamp_valor_total,
         c.oamp_fecha_generacion,
+        c.oamp_estado,
         ui.usu_cedula,
         ui.are_id,
-        ui.usu_primer_nombre,
-        ui.usu_segundo_nombre,
-        ui.usu_primer_apellido,
-        ui.usu_segundo_apellido,
-        ui.usu_telefono,
-        ui.usu_direccion,
-        ac.are_descripcion
-      FROM contratos c
-      JOIN usuarios_info ui ON c.usu_cedula = ui.usu_cedula
+        CONCAT(
+          COALESCE(ui.usu_primer_nombre, ''), ' ',
+          COALESCE(ui.usu_segundo_nombre, ''), ' ',
+          COALESCE(ui.usu_primer_apellido, ''), ' ',
+          COALESCE(ui.usu_segundo_apellido, '')
+        ) as nombre_completo,
+        ac.are_descripcion as area_conocimiento
+      FROM gestora_consultores gc
+      INNER JOIN usuarios_info ui ON gc.consultor_cedula = ui.usu_cedula
+      INNER JOIN contratos c ON gc.consultor_cedula = c.usu_cedula
       LEFT JOIN areas_conocimiento ac ON ui.are_id = ac.are_id
-      WHERE c.oamp_estado = 'Enviado'
+      INNER JOIN cuentas cu ON ui.usu_id = cu.usu_id
+      WHERE gc.gestora_cedula = ?
+        AND gc.gc_activo = TRUE
+        AND c.oamp_estado = 'Enviado'
+        AND cu.usu_activo = TRUE
       ORDER BY c.oamp_fecha_generacion DESC
-    `);
-    
+    `, [gestoraCedula]);
+
     if (!result.success) {
+      console.error('Error en la consulta:', result.error);
       return res.status(500).json({
         success: false,
-        message: 'Error al obtener contratos',
+        message: 'Error al obtener los contratos',
         error: 'DATABASE_ERROR'
       });
     }
 
-    // Debug: Mostrar los datos en consola para verificar
-    console.log('📋 Datos de contratos obtenidos:', JSON.stringify(result.data, null, 2));
+    // Debug: Mostrar los datos en consola
+    console.log('📋 Contratos encontrados:', result.data.length);
+    console.log('🔍 Primer contrato:', result.data[0]);
 
     res.json({
       success: true,
-      data: { contratos: result.data }
+      data: {
+        contratos: result.data
+      }
     });
 
   } catch (error) {
-    console.error('Error al obtener contratos:', error);
+    console.error('Error obteniendo contratos:', error);
     res.status(500).json({
       success: false,
       message: 'Error interno del servidor',
@@ -613,8 +635,29 @@ router.post('/individual', [
 // GET /api/programaciones - Obtener todas las programaciones (grupales e individuales)
 router.get('/', authenticateToken, async (req, res) => {
   try {
+    const { gestoraCedula } = req.query;
+    let consultoresAsignados = null;
+    let filterByGestora = false;
+
+    if (gestoraCedula) {
+      // Buscar los consultores asignados a la gestora
+      const consultoresResult = await executeQuery(
+        'SELECT consultor_cedula FROM gestora_consultores WHERE gestora_cedula = ? AND gc_activo = TRUE',
+        [gestoraCedula]
+      );
+      if (!consultoresResult.success) {
+        return res.status(500).json({
+          success: false,
+          message: 'Error al obtener consultores asignados',
+          error: 'DATABASE_ERROR'
+        });
+      }
+      consultoresAsignados = consultoresResult.data.map(row => row.consultor_cedula);
+      filterByGestora = true;
+    }
+
     // Obtener programaciones grupales
-    const grupalResult = await executeQuery(`
+    let grupalQuery = `
       SELECT 
         CONCAT('grupal_', pg.pro_id) as id,
         pg.pro_id,
@@ -649,11 +692,16 @@ router.get('/', authenticateToken, async (req, res) => {
       JOIN programas p ON pr.prog_id = p.prog_id
       JOIN rutas r ON pr.rut_id = r.rut_id
       JOIN actividades act ON pg.act_id = act.act_id
-      ORDER BY pg.pro_fecha_formacion DESC, pg.pro_hora_inicio DESC
-    `);
+    `;
+    let grupalParams = [];
+    if (filterByGestora && consultoresAsignados.length > 0) {
+      grupalQuery += ` WHERE pg.usu_cedula IN (${consultoresAsignados.map(() => '?').join(',')})`;
+      grupalParams = consultoresAsignados;
+    }
+    grupalQuery += ' ORDER BY pg.pro_fecha_formacion DESC, pg.pro_hora_inicio DESC';
 
     // Obtener programaciones individuales
-    const individualResult = await executeQuery(`
+    let individualQuery = `
       SELECT 
         CONCAT('individual_', pi.proin_id) as id,
         pi.proin_id,
@@ -690,8 +738,19 @@ router.get('/', authenticateToken, async (req, res) => {
       JOIN programas p ON pr.prog_id = p.prog_id
       JOIN rutas r ON pr.rut_id = r.rut_id
       JOIN actividades act ON pi.act_id = act.act_id
-      ORDER BY pi.proin_fecha_formacion DESC, pi.proin_hora_inicio DESC
-    `);
+    `;
+    let individualParams = [];
+    if (filterByGestora && consultoresAsignados.length > 0) {
+      individualQuery += ` WHERE pi.usu_cedula IN (${consultoresAsignados.map(() => '?').join(',')})`;
+      individualParams = consultoresAsignados;
+    }
+    individualQuery += ' ORDER BY pi.proin_fecha_formacion DESC, pi.proin_hora_inicio DESC';
+
+    // Ejecutar ambas consultas
+    const [grupalResult, individualResult] = await Promise.all([
+      executeQuery(grupalQuery, grupalParams),
+      executeQuery(individualQuery, individualParams)
+    ]);
 
     // Verificar si alguna consulta falló
     if (!grupalResult.success || !individualResult.success) {

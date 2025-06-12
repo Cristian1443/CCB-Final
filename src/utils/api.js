@@ -172,8 +172,8 @@ class ApiService {
   }
 
   // Obtener contratos disponibles
-  async getContratos() {
-    return this.request('/programaciones/contratos');
+  async getContratos(gestoraCedula) {
+    return this.request(`/programaciones/contratos?gestoraCedula=${gestoraCedula}`);
   }
 
   // Debug: Obtener información específica de un consultor

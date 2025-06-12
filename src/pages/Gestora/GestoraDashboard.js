@@ -5,6 +5,7 @@ import EventItem from '../../components/EventItem';
 import './GestoraDashboard.css';
 import { FaPlus, FaArrowRight, FaCalendarAlt, FaUsers, FaClock } from 'react-icons/fa';
 import apiService from '../../utils/api';
+import { useAuth } from '../../context/AuthContext';
 
 function GestoraDashboard() {
     const navigate = useNavigate();
@@ -16,6 +17,7 @@ function GestoraDashboard() {
     const [error, setError] = useState(null);
     const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
     const [stats, setStats] = useState({});
+    const { userData, refreshUserData, loading: authLoading } = useAuth();
 
     // Detectar cambios en el tamaño de la pantalla
     useEffect(() => {
@@ -158,138 +160,159 @@ function GestoraDashboard() {
 
     // Función para cargar datos desde la API
     const cargarDatosDesdeAPI = async () => {
+        console.log('cargarDatosDesdeAPI llamada');
         try {
             setLoading(true);
             setError(null);
 
+            // DEPURACIÓN: Mostrar userData
+            console.log('userData.user:', userData.user);
+console.log('userData.user.usu_cedula:', userData.user.usu_cedula);
+            const gestoraCedula = userData && userData.user && userData.user.usu_cedula;
+            // DEPURACIÓN: Mostrar cédula de la gestora
+            console.log('Cédula de la gestora autenticada:', gestoraCedula);
+            if (!gestoraCedula) {
+                setError('No se pudo obtener la cédula de la gestora.');
+                setLoading(false);
+                return;
+            }
+
             // Obtener programaciones y estadísticas en paralelo
             const [programacionesRes, statsRes] = await Promise.all([
-                apiService.getProgramaciones(),
+                apiService.getProgramaciones({ gestoraCedula }),
                 apiService.getDashboardStats()
             ]);
 
-            if (programacionesRes.success) {
-                const programaciones = programacionesRes.data.programaciones;
-                
-                console.log('📊 ANÁLISIS DE PROGRAMACIONES CARGADAS:');
-                console.log('   - Total programaciones:', programaciones.length);
-                if (programaciones.length > 0) {
-                    const primer = programaciones[0];
-                    console.log('   - Primera programación raw:', primer);
-                    console.log('   - Fecha de primera:', typeof primer.date, primer.date);
-                    console.log('   - Hora de primera:', typeof primer.time, primer.time);
-                    console.log('   - Hora fin de primera:', typeof primer.end_time, primer.end_time);
-                }
-                
-                // Transformar datos para que coincidan con el formato esperado por EventItem
-                const eventosTransformados = programaciones.map(prog => ({
-                    id: prog.id,
-                    title: prog.title,
-                    location: prog.location,
-                    date: prog.date,
-                    time: prog.time,
-                    endTime: prog.end_time,
-                    program: prog.program_name,
-                    specialty: prog.area_conocimiento,
-                    modality: prog.modality,
-                    status: prog.status,
-                    instructor: prog.instructor,
-                    participants: prog.participants,
-                    // Campos adicionales que podrían ser útiles
-                    type: prog.type,
-                    hours: prog.hours,
-                    coordinator: prog.coordinator,
-                    link: prog.link,
-                    contract: prog.contract,
-                    total_value: prog.total_value,
-                    program_name: prog.program_name,
-                    route_name: prog.route_name,
-                    activity_type: prog.activity_type,
-                    area_conocimiento: prog.area_conocimiento
-                }));
+            // DEPURACIÓN: Mostrar respuesta de programaciones
+            console.log('Respuesta de programaciones:', programacionesRes);
 
-                // Ordenar eventos por fecha (más próximos primero para el dashboard)
-                const eventosOrdenados = eventosTransformados.sort((a, b) => {
-                    const dateA = new Date(`${a.date}T${a.time}`);
-                    const dateB = new Date(`${b.date}T${b.time}`);
-                    return dateA - dateB;
-                });
-
-                setUpcomingEvents(eventosOrdenados);
-                setScheduledEventsCount(eventosOrdenados.length);
-
-                // Configurar próximo evento
-                if (statsRes.success && statsRes.data.proximo_evento) {
-                    // Usar el próximo evento que viene del backend (más confiable)
-                    const proximoEventoBackend = statsRes.data.proximo_evento;
-                    const fechaObj = crearFechaDesdeDB(proximoEventoBackend.date, proximoEventoBackend.time);
-                    
-                    if (fechaObj) {
-                        const opcionesFecha = { 
-                            day: 'numeric', 
-                            month: 'short',
-                            hour: '2-digit',
-                            minute: '2-digit'
-                        };
-                        const fechaFormateada = fechaObj.toLocaleDateString('es-ES', opcionesFecha);
-
-                        setNextEvent({
-                            title: isMobile && proximoEventoBackend.title.length > 20 
-                                ? proximoEventoBackend.title.substring(0, 20) + '...' 
-                                : proximoEventoBackend.title,
-                            date: fechaFormateada,
-                            location: proximoEventoBackend.location,
-                            modality: proximoEventoBackend.modality
-                        });
-                        
-                        console.log('🎯 Próximo evento del backend:', proximoEventoBackend);
-                    } else {
-                        console.warn('⚠️ Fecha inválida en próximo evento del backend');
-                        setNextEvent({ 
-                            title: "Error en fecha del evento", 
-                            date: "",
-                            location: "",
-                            modality: "" 
-                        });
-                    }
-                } else {
-                    // Fallback: calcular localmente si no viene del backend
-                    const eventoMasProximo = getNextEvent(eventosOrdenados);
-                    if (eventoMasProximo && eventoMasProximo.dateTime) {
-                        const opcionesFecha = { 
-                            day: 'numeric', 
-                            month: 'short',
-                            hour: '2-digit',
-                            minute: '2-digit'
-                        };
-                        const fechaFormateada = eventoMasProximo.dateTime.toLocaleDateString('es-ES', opcionesFecha);
-
-                        setNextEvent({
-                            title: isMobile && eventoMasProximo.title.length > 20 
-                                ? eventoMasProximo.title.substring(0, 20) + '...' 
-                                : eventoMasProximo.title,
-                            date: fechaFormateada,
-                            location: eventoMasProximo.location,
-                            modality: eventoMasProximo.modality
-                        });
-                        
-                        console.log('🎯 Próximo evento calculado localmente:', eventoMasProximo);
-                    } else {
-                        setNextEvent({ 
-                            title: "Sin eventos futuros", 
-                            date: "",
-                            location: "",
-                            modality: "" 
-                        });
-                        console.log('⚠️ No se encontraron eventos futuros');
-                    }
-                }
-
-                console.log('✅ Programaciones cargadas:', eventosOrdenados.length);
-                console.log('🔍 Primer evento transformado:', eventosOrdenados[0]); // Debug para verificar la estructura
-            } else {
-                throw new Error(programacionesRes.message || 'Error al cargar programaciones');
+            if (!programacionesRes || !programacionesRes.success) {
+                const msg = programacionesRes && programacionesRes.message ? programacionesRes.message : 'Error desconocido al cargar programaciones';
+                setError('Error al cargar las programaciones: ' + msg);
+                setUpcomingEvents([]);
+                setScheduledEventsCount(0);
+                setLoading(false);
+                return;
             }
+
+            const programaciones = programacionesRes.data.programaciones;
+            
+            console.log('📊 ANÁLISIS DE PROGRAMACIONES CARGADAS:');
+            console.log('   - Total programaciones:', programaciones.length);
+            if (programaciones.length > 0) {
+                const primer = programaciones[0];
+                console.log('   - Primera programación raw:', primer);
+                console.log('   - Fecha de primera:', typeof primer.date, primer.date);
+                console.log('   - Hora de primera:', typeof primer.time, primer.time);
+                console.log('   - Hora fin de primera:', typeof primer.end_time, primer.end_time);
+            }
+            
+            // Transformar datos para que coincidan con el formato esperado por EventItem
+            const eventosTransformados = programaciones.map(prog => ({
+                id: prog.id,
+                title: prog.title,
+                location: prog.location,
+                date: prog.date,
+                time: prog.time,
+                endTime: prog.end_time,
+                program: prog.program_name,
+                specialty: prog.area_conocimiento,
+                modality: prog.modality,
+                status: prog.status,
+                instructor: prog.instructor,
+                participants: prog.participants,
+                // Campos adicionales que podrían ser útiles
+                type: prog.type,
+                hours: prog.hours,
+                coordinator: prog.coordinator,
+                link: prog.link,
+                contract: prog.contract,
+                total_value: prog.total_value,
+                program_name: prog.program_name,
+                route_name: prog.route_name,
+                activity_type: prog.activity_type,
+                area_conocimiento: prog.area_conocimiento
+            }));
+
+            // Ordenar eventos por fecha (más próximos primero para el dashboard)
+            const eventosOrdenados = eventosTransformados.sort((a, b) => {
+                const dateA = new Date(`${a.date}T${a.time}`);
+                const dateB = new Date(`${b.date}T${b.time}`);
+                return dateA - dateB;
+            });
+
+            setUpcomingEvents(eventosOrdenados);
+            setScheduledEventsCount(eventosOrdenados.length);
+
+            // Configurar próximo evento
+            if (statsRes.success && statsRes.data.proximo_evento) {
+                // Usar el próximo evento que viene del backend (más confiable)
+                const proximoEventoBackend = statsRes.data.proximo_evento;
+                const fechaObj = crearFechaDesdeDB(proximoEventoBackend.date, proximoEventoBackend.time);
+                
+                if (fechaObj) {
+                    const opcionesFecha = { 
+                        day: 'numeric', 
+                        month: 'short',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    };
+                    const fechaFormateada = fechaObj.toLocaleDateString('es-ES', opcionesFecha);
+
+                    setNextEvent({
+                        title: isMobile && proximoEventoBackend.title.length > 20 
+                            ? proximoEventoBackend.title.substring(0, 20) + '...' 
+                            : proximoEventoBackend.title,
+                        date: fechaFormateada,
+                        location: proximoEventoBackend.location,
+                        modality: proximoEventoBackend.modality
+                    });
+                    
+                    console.log('🎯 Próximo evento del backend:', proximoEventoBackend);
+                } else {
+                    console.warn('⚠️ Fecha inválida en próximo evento del backend');
+                    setNextEvent({ 
+                        title: "Error en fecha del evento", 
+                        date: "",
+                        location: "",
+                        modality: "" 
+                    });
+                }
+            } else {
+                // Fallback: calcular localmente si no viene del backend
+                const eventoMasProximo = getNextEvent(eventosOrdenados);
+                if (eventoMasProximo && eventoMasProximo.dateTime) {
+                    const opcionesFecha = { 
+                        day: 'numeric', 
+                        month: 'short',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    };
+                    const fechaFormateada = eventoMasProximo.dateTime.toLocaleDateString('es-ES', opcionesFecha);
+
+                    setNextEvent({
+                        title: isMobile && eventoMasProximo.title.length > 20 
+                            ? eventoMasProximo.title.substring(0, 20) + '...' 
+                            : eventoMasProximo.title,
+                        date: fechaFormateada,
+                        location: eventoMasProximo.location,
+                        modality: eventoMasProximo.modality
+                    });
+                    
+                    console.log('🎯 Próximo evento calculado localmente:', eventoMasProximo);
+                } else {
+                    setNextEvent({ 
+                        title: "Sin eventos futuros", 
+                        date: "",
+                        location: "",
+                        modality: "" 
+                    });
+                    console.log('⚠️ No se encontraron eventos futuros');
+                }
+            }
+
+            console.log('✅ Programaciones cargadas:', eventosOrdenados.length);
+            console.log('🔍 Primer evento transformado:', eventosOrdenados[0]); // Debug para verificar la estructura
 
             // Procesar estadísticas
             if (statsRes.success) {
@@ -327,29 +350,21 @@ function GestoraDashboard() {
 
         } catch (error) {
             console.error('❌ Error cargando datos del dashboard:', error);
-            setError(`Error al cargar los datos: ${error.message}`);
-            
-            // Fallback: intentar cargar datos del localStorage como respaldo
-            try {
-                const eventosLocalStorage = JSON.parse(localStorage.getItem("eventos")) || [];
-                if (eventosLocalStorage.length > 0) {
-                    setUpcomingEvents(eventosLocalStorage);
-                    setScheduledEventsCount(eventosLocalStorage.length);
-                    console.log('⚠️ Usando datos de localStorage como respaldo');
-                    setError("Conectado con datos locales (sin conexión a base de datos)");
-                }
-            } catch (localError) {
-                console.error('❌ Error también con localStorage:', localError);
-            }
+            setError('Error al cargar los datos: ' + (error.message || error));
+            setUpcomingEvents([]);
+            setScheduledEventsCount(0);
         } finally {
             setLoading(false);
         }
     };
 
-    // Cargar datos al montar el componente
+    // Cargar datos al montar el componente o cuando userData/isMobile cambien
     useEffect(() => {
-        cargarDatosDesdeAPI();
-    }, [isMobile]);
+        console.log('useEffect ejecutado', { userData, isMobile, authLoading });
+        if (!authLoading && userData && userData.user && userData.user.usu_cedula) {
+            cargarDatosDesdeAPI();
+        }
+    }, [userData, isMobile, authLoading]);
 
     // Función para eliminar evento
     const handleDeleteUpcomingEvent = async (id) => {
@@ -463,6 +478,13 @@ function GestoraDashboard() {
             </div>
         </div>
     );
+
+    useEffect(() => {
+        // Si no hay cédula, intenta refrescar los datos del usuario
+        if (!authLoading && (!userData || !userData.user || !userData.user.usu_cedula)) {
+            refreshUserData();
+        }
+    }, [userData, authLoading, refreshUserData]);
 
     return (
         <DashboardLayout>
